@@ -6,12 +6,13 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/09 20:23:33 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/01/16 22:40:29 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/01/19 00:12:36 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "mlx_linux/mlx.h"
 #include "types.h"
+#include "keycode.h"
 #include "gnl/get_next_line.h"
 #include "libft/libft.h"
 #include <math.h>
@@ -56,6 +57,27 @@ int	get_b(int trgb)
 	return (trgb & 0xFF);
 }
 
+unsigned int	hex_to_int(const char *hex_str)
+{
+	unsigned int	num;
+	size_t			i;
+
+	num = 0;
+	i = 0;
+	while (hex_str[i] && i < 8)
+	{
+		num = num << 4;
+		if ('0' <= hex_str[i] && hex_str[i] <= '9')
+			num = num + (hex_str[i] - '0');
+		else if ('a' <= hex_str[i] && hex_str[i] <= 'z')
+			num = num + (hex_str[i] - 'a') + 10;
+		else if ('A' <= hex_str[i] && hex_str[i] <= 'Z')
+			num = num + (hex_str[i] - 'A') + 10;
+		i++;
+	}
+	return (num);
+}
+
 void	draw_line(t_data *data, t_line *line)
 {
 	int	dx;
@@ -95,50 +117,50 @@ void	draw_line(t_data *data, t_line *line)
 	}
 }
 
-void	draw_map(t_data *img, t_map *map)
+void	draw_map(t_data *img, t_map *map, t_program *program)
 {
 	int	i;
 	int	j;
 	t_line	line;
-	const double	angle_x = 0.785398;
-	const double	angle_y = 0.523599;
-	int	iso_x;
-	int	iso_y;
-	int	next_iso_x;
-	int	next_iso_y;
-	const int	scale = 30;
+	const int	win_center_x = 1920 / 2;
+	const int	win_center_y = 1080 / 2;
+	int	map_center_x;
+	int	map_center_y;
+	double	x0;
+	double	y0;
 
 	i = 0;
-	line.color  = 0x00FFFFFF;
+	map_center_x = ((map->width[0] - 1) * program->scale) / 2;
+	map_center_y = ((map->height - 1) * program->scale) / 2;
 	while (i < map->height)
 	{
 		j = 0;
 		while (j < map->width[i])
 		{
-			iso_x = (j - i) * cos(angle_x) * scale;
-			iso_y = ((j + i) * sin(angle_y) - map->z_value[i][j][0]) * scale;
-			line.x0 = iso_x + 960 - ((map->width[0] - 1) * scale / 2);
-			line.y0 = iso_y + 540 - ((map->height - 1) * scale / 2);
-			my_mlx_pixel_put(img, line.x0, line.y0,line.color);
-			
+			program->projected_x = j * cos(program->angle_x) - i * sin(program->angle_x);
+			program->projected_y = -map->z_value[i][j][0] + (j * sin(program->angle_y) + i * cos(program->angle_y));
+			x0 = (program->projected_x * program->scale) + win_center_x + program->offset_x;
+			y0 = (program->projected_y * program->scale) + win_center_y + program->offset_y;
+			line.x0 = x0;
+			line.y0 = y0;
+			line.color = map->z_value[i][j][1];
+			my_mlx_pixel_put(img, line.x0, line.y0, line.color);
 			if (j < map->width[i] - 1)
 			{
-				next_iso_x = ((j + 1) - i) * cos(angle_x) * scale;
-				next_iso_y = (((j + 1) + i) * sin(angle_y) - map->z_value[i][j + 1][0]) * scale;
-				line.x1 = next_iso_x + 960 - ((map->width[0] - 1) * scale / 2);
-				line.y1 = next_iso_y + 540 - ((map->height - 1) * scale / 2);
+				program->projected_x = (j + 1) * cos(program->angle_x) - i * sin(program->angle_x);
+				program->projected_y = -map->z_value[i][j + 1][0] + ((j + 1) * sin(program->angle_y) + i * cos(program->angle_y));
+				line.x1 = (program->projected_x * program->scale) + win_center_x + program->offset_x;
+				line.y1 = (program->projected_y * program->scale) + win_center_y + program->offset_y;
 				draw_line(img, &line);
 			}
-			
-			line.x0 = iso_x + 960 - ((map->width[0] - 1) * scale / 2);
-			line.y0 = iso_y + 540 - ((map->height - 1) * scale / 2);
-			
 			if (i < map->height - 1)
 			{
-				next_iso_x = (j - (i + 1)) * cos(angle_x) * scale;
-				next_iso_y = ((j + (i + 1)) * sin(angle_y) - map->z_value[i + 1][j][0]) * scale;
-				line.x1 = next_iso_x + 960 - ((map->width[0] - 1) * scale / 2);
-				line.y1 = next_iso_y + 540 - ((map->height - 1) * scale / 2);
+				line.x0 = x0;
+				line.y0 = y0;
+				program->projected_x = j * cos(program->angle_x) - (i + 1) * sin(program->angle_x);
+				program->projected_y = -map->z_value[i + 1][j][0] + (j * sin(program->angle_y) + (i + 1) * cos(program->angle_y));
+				line.x1 = (program->projected_x * program->scale) + win_center_x + program->offset_x;
+				line.y1 = (program->projected_y * program->scale) + win_center_y + program->offset_y;
 				draw_line(img, &line);
 			}
 			j++;
@@ -204,7 +226,10 @@ t_map	*get_map_size(t_map *map, char *file, int fd)
 		return (NULL);
 	fd = open(file, O_RDONLY);
 	if (fd == -1)
+	{
+		free(map->width);
 		return (NULL);
+	}
 	i = 0;
 	while (1)
 	{
@@ -213,10 +238,10 @@ t_map	*get_map_size(t_map *map, char *file, int fd)
 			break ;
 		map->width[i] = count_word(line, ' ');
 		free(line);
-		printf("width[%d]: %d\n", i, map->width[i]);
+		// printf("width[%d]: %d\n", i, map->width[i]);
 		i++;
 	}
-	printf("height: %d\n", map->height);
+	// printf("height: %d\n", map->height);
 	close(fd);
 	return (map);
 }
@@ -249,9 +274,10 @@ void	free_map(t_map *map)
 			if (map->z_value[i])
 			{
 				j = 0;
-				while (j < map->width[j])
+				while (j < map->width[i])
 				{
-					free(map->z_value[i][j]);
+					if (map->z_value[i][j])
+						free(map->z_value[i][j]);
 					j++;
 				}
 				free(map->z_value[i]);
@@ -260,12 +286,15 @@ void	free_map(t_map *map)
 		}
 		free(map->z_value);
 	}
-	free(map->width);
+	if (map->width)
+		free(map->width);
 	free(map);
 }
 
-void	all_free(t_map *map, char **array, char *line)
+void	all_free(t_program *program, t_map *map, char **array, char *line)
 {
+	if (program)
+		free(program);
 	if (map)
 		free_map(map);
 	if (array)
@@ -274,16 +303,19 @@ void	all_free(t_map *map, char **array, char *line)
 		free(line);
 }
 
-t_map	*init_map(char *file, int fd)
+t_map	*init_map(t_map *map, char *file, int fd)
 {
-	t_map	*map;
+	// t_map	*map;
 
 	map = (t_map *)malloc(sizeof(t_map));
 	if (!map)
 		return (NULL);
 	map = get_map_size(map, file, fd);
 	if (!map)
+	{
+		free(map);
 		return (NULL);
+	}
 	return (map);
 }
 
@@ -317,40 +349,147 @@ void	display_map(t_map *map)
 	}
 }
 
+void	cleanup_mlx(t_program *program)
+{
+
+	if (!program)
+		return ;
+	if (program->img && program->img->img)
+		mlx_destroy_image(program->vars->mlx, program->img->img);
+	if (program->vars && program->vars->win)
+		mlx_destroy_window(program->vars->mlx, program->vars->win);
+	if (program->vars && program->vars->mlx)
+		free(program->vars->mlx);
+}
+
+void	clear_image(t_data *img)
+{
+	ft_memset(img->addr, 0, 1920 * 1080 * (img->bits_per_pixel / 8));
+}
+
+int	 key_hook(int keycode, t_vars *vars)
+{
+	t_program	*program;
+
+	program = vars->program;
+	if (keycode == ESC_KEY)
+	{
+		cleanup_mlx(program);
+		if (program && program->map)
+			all_free(program, program->map, NULL, NULL);
+		else
+			all_free(program, NULL, NULL, NULL);
+		exit(0);
+	}
+	else if (keycode == PLUS_KEY)
+	{
+		program->scale += 3;
+		if (program->scale > 1000)
+			program->scale = 1000;
+	}
+	else if (keycode == MINUS_KEY)
+	{
+		program->scale -= 2;
+		if (program->scale < 2)
+			program->scale = 2;
+	}
+	else if (keycode == W_KEY)
+		program->offset_y -= 3;
+	else if (keycode == S_KEY)
+		program->offset_y += 3;
+	else if (keycode == D_KEY)
+		program->offset_x += 3;
+	else if (keycode == A_KEY)
+		program->offset_x -= 3;
+	else if (keycode == ARROW_UP)
+		program->angle_y -= 0.1;
+	else if (keycode == ARROW_DOWN)
+		program->angle_y += 0.1;
+	else if (keycode == ARROW_RIGHT)
+		program->angle_x -= 0.1;
+	else if (keycode == ARROW_LEFT)
+		program->angle_x += 0.1;
+	clear_image(program->img);
+	draw_map(program->img, program->map, program);
+	mlx_put_image_to_window(program->vars->mlx, program->vars->win, program->img->img, 0, 0);
+	mlx_string_put(vars->mlx, vars->win, 10, 10, 0x0000FFFF, vars->title);
+	return (0);
+}
+
+int	close_window(t_vars *vars)
+{
+	t_program	*program;
+
+	program = vars->program;
+	cleanup_mlx(program);
+	if (program && program->map)
+			all_free(program, program->map, NULL, NULL);
+	else
+		all_free(program, NULL, NULL, NULL);
+	exit(0);
+	return (0);
+}
+
+t_program	*init_program(t_program	**program, t_vars *vars, t_data *img)
+{
+	*program = (t_program *)malloc(sizeof(t_program));
+	if (!*program)
+		return (NULL);
+	(*program)->vars = vars;
+	(*program)->img = img;
+	(*program)->scale = 2;
+	(*program)->offset_x = 0;
+	(*program)->offset_y = 0;
+	(*program)->angle_x = MY_PI / 6;
+	(*program)->angle_y = MY_PI / 6;
+	(*program)->angle_z = 0.0;
+	(*program)->projected_x = 0.0;
+	(*program)->projected_y = 0.0;
+	return (*program);
+}
+
 int	main(int ac, char **av)
 {
-	void	*mlx;
-	void	*mlx_win;
-	t_data	img;
+	t_program	*program;
+	t_vars		vars;
+	t_data		img;
 
-	int		fd;
-	char	*line;
-	char	**array;
-	char	**split_arr;
-	t_map	*map;
-	int		i;
-	int		j;
-	int		wc;
+	int			fd;
+	char		*line;
+	char		**array;
+	char		**split_arr;
+	t_map		*map;
+	int			i;
+	int			j;
+	int			wc;
 
 	if (ac > 2)
 		return (1);
+	program = init_program(&program, &vars, &img);
+	if (!program)
+		return (1);
+	vars.program = program;
+	vars.title = av[1];
 	fd = open(av[1], O_RDONLY);
 	if (fd == -1)
 	{
+		all_free(program, NULL, NULL, NULL);
 		write(1, "Error\n", 6);
 		return (1);
 	}
-	map = init_map(av[1], fd);
-	if (!map)
+	map = NULL;
+	program->map = init_map(map, av[1], fd);
+	if (!program->map)
 	{
+		all_free(program, NULL, NULL, NULL);
 		write(1, "Error\n", 6);
 		return (1);
 	}
 	// z_valueの1次元目のメモリ確保
-	map->z_value = malloc(sizeof(int **) * map->height);
-	if (!map->z_value)
+	program->map->z_value = malloc(sizeof(int **) * program->map->height);
+	if (!program->map->z_value)
 	{
-		all_free(map, NULL, NULL);
+		all_free(NULL, program->map, NULL, NULL);
 		return (1);
 	}
 
@@ -362,31 +501,33 @@ int	main(int ac, char **av)
 		line = get_next_line(fd);
 		if (!line)
 		{
-			printf("\n");
+			// printf("\n");
 			break ;
 		}
 		wc = count_word(line, ' ');
-		printf("\nProcessing line[%d] = %s", i, line);
+		// printf("\nline[%d] = %s", i, line);
+		// if (!ft_strchr(line, '\n'))
+		// 	printf("\n");
 		array = ft_split(line, ' ');
 		if (!array)
 		{
-			all_free(map, NULL, line);
+			all_free(NULL, program->map, NULL, line);
 			return (1);
 		}
 		// z_valueの2次元目のメモリ確保
-		map->z_value[i] = malloc(sizeof(int *) * map->width[i]);
-		if (!map->z_value[i])
+		program->map->z_value[i] = malloc(sizeof(int *) * program->map->width[i]);
+		if (!program->map->z_value[i])
 		{
-			all_free(map, array, line);
+			all_free(NULL, program->map, array, line);
 			return (1);
 		}
 		j = 0;
 		while (j < wc)
 		{
-			map->z_value[i][j] = malloc(sizeof(int) * 2); // 高さと色の分をmallocする
-			if (!map->z_value[i][j])
+			program->map->z_value[i][j] = malloc(sizeof(int) * 2); // 高さと色の分をmallocする
+			if (!program->map->z_value[i][j])
 			{
-				all_free(map, array, line);
+				all_free(NULL, program->map, array, line);
 				return (1);
 			}
 			// 高さと色の情報を入れていく
@@ -394,43 +535,63 @@ int	main(int ac, char **av)
 			{
 				if (!ft_strchr(array[j], ','))
 				{
-					map->z_value[i][j][0] = ft_atoi(array[j]); 
-					map->z_value[i][j][1] = 0;
+					program->map->z_value[i][j][0] = ft_atoi(array[j]); 
+					program->map->z_value[i][j][1] = hex_to_int("0x00FFFFFF");
 				}
 				else
 				{
 					split_arr = ft_split(array[j], ',');
 					if (!split_arr)
 					{
-						all_free(map, NULL, array[j]);
+						all_free(NULL, program->map, NULL, array[j]);
 						return (1);
 					}
-					map->z_value[i][j][0] = ft_atoi(split_arr[0]);
-					map->z_value[i][j][1] = ft_atoi(split_arr[1]); 
-					all_free(NULL, split_arr, NULL);
+					program->map->z_value[i][j][0] = ft_atoi(split_arr[0]);
+					if (ft_strlen(split_arr[1]) > 2 && split_arr[1][0] == '0' &&
+						(split_arr[1][1] == 'x' || split_arr[1][1] == 'X'))
+						program->map->z_value[i][j][1] = hex_to_int(split_arr[1] + 2);
+					else
+						program->map->z_value[i][j][1] = hex_to_int("0x00FFFFFF");
+					all_free(NULL, NULL, split_arr, NULL);
 				}
-				//カンマが来るまで数字に変換する、ポインタをずらしてそれを色に変換する
-				
-				// 色の情報を入れていく  map->z_value[i][j][1]
-				printf("Stored value at [%d][%d] = h:%d, c: %d\n", i, j, map->z_value[i][j][0], map->z_value[i][j][1]);
+				// printf("z_value[%d][%d] = h:%d, c: %d\n", i, j, program->map->z_value[i][j][0], program->map->z_value[i][j][1]);
 			}
 			j++;
 		}
-		all_free(NULL, array, line);
+		all_free(NULL, NULL, array, line);
 		i++;
 	}
 	close(fd);
 
-	mlx = mlx_init();
-	mlx_win = mlx_new_window(mlx, 1920, 1080, "Hello World!");
-	img.img = mlx_new_image(mlx, 1920, 1080);
+	vars.mlx = mlx_init();
+	if (!vars.mlx)
+	{
+		all_free(program, program->map, NULL, NULL);
+		return (1);
+	}
+	vars.win = mlx_new_window(vars.mlx, 1920, 1080, "FDF");
+	if (!vars.win)
+	{
+		all_free(program, program->map, NULL, NULL);
+		cleanup_mlx(program);
+		return (1);
+	}
+	img.img = mlx_new_image(vars.mlx, 1920, 1080);
+	if (!img.img)
+	{
+		all_free(program, program->map, NULL, NULL);
+		cleanup_mlx(program);
+		return (1);
+	}
 	img.addr = mlx_get_data_addr(img.img, &img.bits_per_pixel, &img.line_length, &img.endian);
-	i = 0;
-	draw_map(&img, map);
-	mlx_put_image_to_window(mlx, mlx_win, img.img, 0, 0);
-	mlx_loop(mlx);
+	draw_map(&img, program->map, program);
+	mlx_put_image_to_window(vars.mlx, vars.win, img.img, 0, 0);
+	mlx_string_put(vars.mlx, vars.win, 10, 10, 0x0000FFFF, vars.title);
+	mlx_hook(vars.win, 2, 1L<<0, key_hook, &vars);
+	mlx_hook(vars.win, 17, 0, close_window, &vars);
+	mlx_loop(vars.mlx);
 	// display structure
-	printf("\nFinal structure:\n");
-	display_map(map);
-	all_free(map, NULL, NULL);
+	// printf("\nFinal structure:\n");
+	// display_map(map);
+	all_free(program, program->map, NULL, NULL);
 }
