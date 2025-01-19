@@ -6,7 +6,7 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/09 20:23:33 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/01/19 16:28:50 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/01/19 21:27:13 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,6 +117,28 @@ void	draw_line(t_data *data, t_line *line)
 	}
 }
 
+// void	rotate_point(t_program *program, double *x, double *y, double *z)
+// {
+// 	double	temp_x;
+// 	double	temp_y;
+// 	double	temp_z;
+
+// 	// rotate X axis
+// 	temp_y = *y * cos(program->angle_x) - *z * sin(program->angle_x);
+// 	temp_z = *y * sin(program->angle_x) + *z * cos(program->angle_x);
+// 	*y = temp_y;
+// 	*z = temp_z;
+
+// 	// rotate Y axis
+// 	temp_x = *x * cos(program->angle_y) + *z *sin(program->angle_y);
+// 	temp_z = -*x * sin(program->angle_y) + *z * cos(program->angle_y);
+// 	*x = temp_x;
+// 	*z = temp_z;
+
+// 	// rotate Z axis
+// 	temp_x = *x * cos(program->angle_z) - *y * sin(program->angle_z);
+// }
+
 void	draw_map(t_data *img, t_map *map, t_program *program)
 {
 	int	i;
@@ -126,6 +148,10 @@ void	draw_map(t_data *img, t_map *map, t_program *program)
 	const int	win_center_y = 1080 / 2;
 	double	x0;
 	double	y0;
+	double	iso_x;
+	double	iso_y;
+	double	iso_z;
+	const double	height_factor = sqrt(2.0) / sqrt(3.0);
 
 	i = 0;
 	while (i < map->height)
@@ -133,11 +159,13 @@ void	draw_map(t_data *img, t_map *map, t_program *program)
 		j = 0;
 		while (j < map->width[i])
 		{
-			program->projected_x = (j - i) * cos(MY_PI / 6);
-			program->projected_y = (j + i) * sin(MY_PI / 6);
-			program->rotate_x = program->projected_x * cos(program->angle_x) - program->projected_y * sin(program->angle_x);
-			program->rotate_y = program->projected_y * cos(program->angle_y) + program->projected_x * sin(program->angle_y) - map->z_value[i][j][0];
+			iso_x = (j - i) * cos(MY_PI / 6);
+			iso_y = (j + i) * sin(MY_PI / 6);
+			iso_z = map->z_value[i][j][0] * height_factor;
+			program->rotate_x = iso_x * cos(program->angle_x) - iso_y * sin(program->angle_x);
+			program->rotate_y = iso_y * cos(program->angle_y) + iso_x * sin(program->angle_y) - iso_z;
 			x0 = (program->rotate_x * program->scale) + win_center_x + program->offset_x;
+			
 			y0 = (program->rotate_y * program->scale) + win_center_y + program->offset_y;
 			line.x0 = x0;
 			line.y0 = y0;
@@ -145,10 +173,11 @@ void	draw_map(t_data *img, t_map *map, t_program *program)
 			my_mlx_pixel_put(img, line.x0, line.y0, line.color);
 			if (j < map->width[i] - 1)
 			{
-				program->projected_x = ((j + 1) - i) * cos(MY_PI / 6);
-				program->projected_y = ((j + 1) + i) * sin(MY_PI / 6);
-				program->rotate_x = program->projected_x * cos(program->angle_x) - program->projected_y * sin(program->angle_x);
-				program->rotate_y = program->projected_y * cos(program->angle_y) + program->projected_x * sin(program->angle_y) - map->z_value[i][j + 1][0];
+				iso_x = ((j + 1) - i) * cos(MY_PI / 6);
+				iso_y = ((j + 1) + i) * sin(MY_PI / 6);
+				iso_z = map->z_value[i][j + 1][0] * height_factor;
+				program->rotate_x = iso_x * cos(program->angle_x) - iso_y * sin(program->angle_x);
+				program->rotate_y = iso_y * cos(program->angle_y) + iso_x * sin(program->angle_y) - iso_z;
 				line.x1 = (program->rotate_x * program->scale) + win_center_x + program->offset_x;
 				line.y1 = (program->rotate_y * program->scale) + win_center_y + program->offset_y;
 				draw_line(img, &line);
@@ -157,10 +186,11 @@ void	draw_map(t_data *img, t_map *map, t_program *program)
 			{
 				line.x0 = x0;
 				line.y0 = y0;
-				program->projected_x = (j - (i + 1)) * cos(MY_PI / 6);
-				program->projected_y = (j + (i + 1)) * sin(MY_PI / 6);
-				program->rotate_x = program->projected_x * cos(program->angle_x) - program->projected_y * sin(program->angle_x);
-				program->rotate_y = program->projected_y * cos(program->angle_y) + program->projected_x * sin(program->angle_y) - map->z_value[i + 1][j][0];
+				iso_x = (j - (i + 1)) * cos(MY_PI / 6);
+				iso_y = (j + (i + 1)) * sin(MY_PI / 6);
+				iso_z = map->z_value[i + 1][j][0] * height_factor;
+				program->rotate_x = iso_x * cos(program->angle_x) - iso_y * sin(program->angle_x);
+				program->rotate_y = iso_y * cos(program->angle_y) + iso_x * sin(program->angle_y) - iso_z;
 				line.x1 = (program->rotate_x * program->scale) + win_center_x + program->offset_x;
 				line.y1 = (program->rotate_y * program->scale) + win_center_y + program->offset_y;
 				draw_line(img, &line);
@@ -396,13 +426,13 @@ int	 key_hook(int keycode, t_vars *vars)
 			program->scale = 2;
 	}
 	else if (keycode == W_KEY)
-		program->offset_y -= 3;
-	else if (keycode == S_KEY)
 		program->offset_y += 3;
+	else if (keycode == S_KEY)
+		program->offset_y -= 3;
 	else if (keycode == D_KEY)
-		program->offset_x += 3;
-	else if (keycode == A_KEY)
 		program->offset_x -= 3;
+	else if (keycode == A_KEY)
+		program->offset_x += 3;
 	else if (keycode == ARROW_UP)
 		program->angle_y -= 0.1;
 	else if (keycode == ARROW_DOWN)
@@ -466,6 +496,7 @@ int	main(int ac, char **av)
 	int			j;
 	int			wc;
 
+	printf("*");
 	if (ac > 2)
 		return (1);
 	program = init_program(&program, &vars, &img);
@@ -488,15 +519,12 @@ int	main(int ac, char **av)
 		write(1, "Error\n", 6);
 		return (1);
 	}
-	// z_valueの1次元目のメモリ確保
 	program->map->z_value = malloc(sizeof(int **) * program->map->height);
 	if (!program->map->z_value)
 	{
 		all_free(NULL, program->map, NULL, NULL);
 		return (1);
 	}
-
-	// 2回目の読み込みでデータを格納
 	i = 0;
 	fd = open(av[1], O_RDONLY);
 	while (1)
@@ -517,7 +545,6 @@ int	main(int ac, char **av)
 			all_free(NULL, program->map, NULL, line);
 			return (1);
 		}
-		// z_valueの2次元目のメモリ確保
 		program->map->z_value[i] = malloc(sizeof(int *) * program->map->width[i]);
 		if (!program->map->z_value[i])
 		{
@@ -557,6 +584,7 @@ int	main(int ac, char **av)
 					all_free(NULL, NULL, split_arr, NULL);
 				}
 				// printf("z_value[%d][%d] = h:%d, c: %d\n", i, j, program->map->z_value[i][j][0], program->map->z_value[i][j][1]);
+				printf(".");
 			}
 			j++;
 		}
@@ -571,7 +599,7 @@ int	main(int ac, char **av)
 		all_free(program, program->map, NULL, NULL);
 		return (1);
 	}
-	vars.win = mlx_new_window(vars.mlx, 1920, 1080, "FDF");
+	vars.win = mlx_new_window(vars.mlx, 1920, 1080, av[1]);
 	if (!vars.win)
 	{
 		all_free(program, program->map, NULL, NULL);

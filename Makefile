@@ -1,6 +1,6 @@
 CC = cc
 
-CFLAGS = -Werror -Wall -Wextra -I. -I$(MLX_PATH) -I$(LIBFT_DIR) -fsanitize=undefined
+CFLAGS = -Werror -Wall -Wextra -I. -I$(MLX_PATH) -I$(LIBFT_DIR) -fsanitize=undefined -g
 
 NAME = fdf
 
@@ -37,13 +37,13 @@ clean:
 
 fclean: clean
 	rm -f $(NAME)
+	rm -f $(LIBFT)
 	make -C $(MLX_PATH) clean
 	make -C $(LIBFT_DIR) clean
-# libft.aを削除できるようにする
 
 re: fclean all
 
 rr:
 	make re && make clean
 
-.PHONY: all clean fclean re
+.PHONY: all clean fclean re rr
