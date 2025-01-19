@@ -6,7 +6,7 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/17 23:13:21 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/01/18 18:03:20 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/01/19 21:36:51 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,9 @@
 # define A_KEY 97
 # define S_KEY 115
 # define D_KEY 100
+# define X_KEY 120
+# define Z_KEY 122
+
 
 // Rotate
 # define ARROW_UP 65362

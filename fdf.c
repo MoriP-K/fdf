@@ -6,7 +6,7 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/09 20:23:33 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/01/19 21:27:13 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/01/19 22:13:12 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,27 +117,30 @@ void	draw_line(t_data *data, t_line *line)
 	}
 }
 
-// void	rotate_point(t_program *program, double *x, double *y, double *z)
-// {
-// 	double	temp_x;
-// 	double	temp_y;
-// 	double	temp_z;
+void	rotate_point(t_program *program, double *x, double *y, double *z)
+{
+	double	temp_x;
+	double	temp_y;
+	double	temp_z;
 
-// 	// rotate X axis
-// 	temp_y = *y * cos(program->angle_x) - *z * sin(program->angle_x);
-// 	temp_z = *y * sin(program->angle_x) + *z * cos(program->angle_x);
-// 	*y = temp_y;
-// 	*z = temp_z;
+	// rotate X axis
+	temp_y = *y * cos(program->angle_x) - *z * sin(program->angle_x);
+	temp_z = *y * sin(program->angle_x) + *z * cos(program->angle_x);
+	*y = temp_y;
+	*z = temp_z;
 
-// 	// rotate Y axis
-// 	temp_x = *x * cos(program->angle_y) + *z *sin(program->angle_y);
-// 	temp_z = -*x * sin(program->angle_y) + *z * cos(program->angle_y);
-// 	*x = temp_x;
-// 	*z = temp_z;
+	// rotate Y axis
+	temp_x = *x * cos(program->angle_y) + *z * sin(program->angle_y);
+	temp_z = -*x * sin(program->angle_y) + *z * cos(program->angle_y);
+	*x = temp_x;
+	*z = temp_z;
 
-// 	// rotate Z axis
-// 	temp_x = *x * cos(program->angle_z) - *y * sin(program->angle_z);
-// }
+	// rotate Z axis
+	temp_x = *x * cos(program->angle_z) - *y * sin(program->angle_z);
+	temp_y = *x * sin(program->angle_z) + *y * cos(program->angle_z);
+	*x = temp_x;
+	*y = temp_y;
+}
 
 void	draw_map(t_data *img, t_map *map, t_program *program)
 {
@@ -146,11 +149,11 @@ void	draw_map(t_data *img, t_map *map, t_program *program)
 	t_line	line;
 	const int	win_center_x = 1920 / 2;
 	const int	win_center_y = 1080 / 2;
-	double	x0;
-	double	y0;
-	double	iso_x;
-	double	iso_y;
-	double	iso_z;
+	double	screen_x;
+	double	screen_y;
+	double	x;
+	double	y;
+	double	z;
 	const double	height_factor = sqrt(2.0) / sqrt(3.0);
 
 	i = 0;
@@ -159,40 +162,34 @@ void	draw_map(t_data *img, t_map *map, t_program *program)
 		j = 0;
 		while (j < map->width[i])
 		{
-			iso_x = (j - i) * cos(MY_PI / 6);
-			iso_y = (j + i) * sin(MY_PI / 6);
-			iso_z = map->z_value[i][j][0] * height_factor;
-			program->rotate_x = iso_x * cos(program->angle_x) - iso_y * sin(program->angle_x);
-			program->rotate_y = iso_y * cos(program->angle_y) + iso_x * sin(program->angle_y) - iso_z;
-			x0 = (program->rotate_x * program->scale) + win_center_x + program->offset_x;
-			
-			y0 = (program->rotate_y * program->scale) + win_center_y + program->offset_y;
-			line.x0 = x0;
-			line.y0 = y0;
+			x = (j - i) * cos(MY_PI / 6);
+			y = (j + i) * sin(MY_PI / 6);
+			z = map->z_value[i][j][0] * height_factor;
+			rotate_point(program, &x, &y, &z);
+			screen_x = (x * program->scale) + win_center_x + program->offset_x;
+			screen_y = (y * program->scale) + win_center_y + program->offset_y;
+			line.x0 = screen_x;
+			line.y0 = screen_y;
 			line.color = map->z_value[i][j][1];
 			my_mlx_pixel_put(img, line.x0, line.y0, line.color);
 			if (j < map->width[i] - 1)
 			{
-				iso_x = ((j + 1) - i) * cos(MY_PI / 6);
-				iso_y = ((j + 1) + i) * sin(MY_PI / 6);
-				iso_z = map->z_value[i][j + 1][0] * height_factor;
-				program->rotate_x = iso_x * cos(program->angle_x) - iso_y * sin(program->angle_x);
-				program->rotate_y = iso_y * cos(program->angle_y) + iso_x * sin(program->angle_y) - iso_z;
-				line.x1 = (program->rotate_x * program->scale) + win_center_x + program->offset_x;
-				line.y1 = (program->rotate_y * program->scale) + win_center_y + program->offset_y;
+				x = ((j + 1) - i) * cos(MY_PI / 6);
+				y = ((j + 1) + i) * sin(MY_PI / 6);
+				z = map->z_value[i][j + 1][0] * height_factor;
+				rotate_point(program, &x, &y, &z);
+				line.x1 = (x * program->scale) + win_center_x + program->offset_x;
+				line.y1 = (y * program->scale) + win_center_y + program->offset_y;
 				draw_line(img, &line);
 			}
 			if (i < map->height - 1)
 			{
-				line.x0 = x0;
-				line.y0 = y0;
-				iso_x = (j - (i + 1)) * cos(MY_PI / 6);
-				iso_y = (j + (i + 1)) * sin(MY_PI / 6);
-				iso_z = map->z_value[i + 1][j][0] * height_factor;
-				program->rotate_x = iso_x * cos(program->angle_x) - iso_y * sin(program->angle_x);
-				program->rotate_y = iso_y * cos(program->angle_y) + iso_x * sin(program->angle_y) - iso_z;
-				line.x1 = (program->rotate_x * program->scale) + win_center_x + program->offset_x;
-				line.y1 = (program->rotate_y * program->scale) + win_center_y + program->offset_y;
+				x = (j - (i + 1)) * cos(MY_PI / 6);
+				y = (j + (i + 1)) * sin(MY_PI / 6);
+				z = map->z_value[i + 1][j][0] * height_factor;
+				rotate_point(program, &x, &y, &z);
+				line.x1 = (x * program->scale) + win_center_x + program->offset_x;
+				line.y1 = (y * program->scale) + win_center_y + program->offset_y;
 				draw_line(img, &line);
 			}
 			j++;
@@ -337,8 +334,6 @@ void	all_free(t_program *program, t_map *map, char **array, char *line)
 
 t_map	*init_map(t_map *map, char *file, int fd)
 {
-	// t_map	*map;
-
 	map = (t_map *)malloc(sizeof(t_map));
 	if (!map)
 		return (NULL);
@@ -383,7 +378,6 @@ void	display_map(t_map *map)
 
 void	cleanup_mlx(t_program *program)
 {
-
 	if (!program)
 		return ;
 	if (program->img && program->img->img)
@@ -426,21 +420,25 @@ int	 key_hook(int keycode, t_vars *vars)
 			program->scale = 2;
 	}
 	else if (keycode == W_KEY)
-		program->offset_y += 3;
+		program->offset_y += 5;
 	else if (keycode == S_KEY)
-		program->offset_y -= 3;
+		program->offset_y -= 5;
 	else if (keycode == D_KEY)
-		program->offset_x -= 3;
+		program->offset_x -= 5;
 	else if (keycode == A_KEY)
-		program->offset_x += 3;
-	else if (keycode == ARROW_UP)
-		program->angle_y -= 0.1;
-	else if (keycode == ARROW_DOWN)
-		program->angle_y += 0.1;
+		program->offset_x += 5;
 	else if (keycode == ARROW_RIGHT)
-		program->angle_x -= 0.1;
+		program->angle_y -= 0.1;
 	else if (keycode == ARROW_LEFT)
+		program->angle_y += 0.1;
+	else if (keycode == ARROW_DOWN)
+		program->angle_x -= 0.1;
+	else if (keycode == ARROW_UP)
 		program->angle_x += 0.1;
+	else if (keycode == X_KEY)
+		program->angle_z -= 0.1;
+	else if (keycode == Z_KEY)
+		program->angle_z += 0.1;
 	clear_image(program->img);
 	draw_map(program->img, program->map, program);
 	mlx_put_image_to_window(program->vars->mlx, program->vars->win, program->img->img, 0, 0);
@@ -474,8 +472,10 @@ t_program	*init_program(t_program	**program, t_vars *vars, t_data *img)
 	(*program)->offset_y = 0;
 	(*program)->angle_x = 0;
 	(*program)->angle_y = 0;
+	(*program)->angle_z = 0;
 	(*program)->rotate_x = 0;
 	(*program)->rotate_y = 0;
+	(*program)->rotate_z = 0;
 	(*program)->projected_x = 0.0;
 	(*program)->projected_y = 0.0;
 	return (*program);
