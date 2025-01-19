@@ -6,7 +6,7 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 15:04:39 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/01/18 19:34:00 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/01/19 16:35:50 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,8 @@ typedef struct	s_program
 	int			offset_y;
 	double		angle_x;
 	double		angle_y;
-	double		angle_z;
+	double		rotate_x;
+	double		rotate_y;
 	double		projected_x;
 	double		projected_y;
 }				t_program;

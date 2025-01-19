@@ -6,7 +6,7 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/09 20:23:33 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/01/19 00:12:36 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/01/19 16:28:50 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,32 +87,32 @@ void	draw_line(t_data *data, t_line *line)
 	int	error;
 	int	error2;
 
-	dx = abs(line->x1 - line->x0);
-	dy = abs(line->y1 - line->y0);
+	dx = abs(line->x1 - line->x0); // ｘ方向の距離
+	dy = abs(line->y1 - line->y0); // ｙ方向の距離
 	if (line->x0 < line->x1)
-		sx = 1;
+		sx = 1; // 右に進む
 	else
-		sx = -1;
+		sx = -1; // 左に進む
 	if (line->y0 < line->y1)
-		sy = 1;
+		sy = 1; // 下に進む
 	else
-		sy = -1;
-	error = dx - dy;
+		sy = -1; // 上に進む
+	error = dx - dy; // 誤差の初期値を設定
 	while (1)
 	{
 		my_mlx_pixel_put(data, line->x0, line->y0, line->color);
 		if (line->x0 == line->x1 && line->y0 == line->y1)
 			break ;
-		error2 = error * 2;
+		error2 = error * 2; // 次の移動方向を決めるために誤差値を2倍する
 		if (error2 > -dy)
 		{
-			error -= dy;
-			line->x0 += sx;
+			error -= dy; // 誤差を更新
+			line->x0 += sx; // 座標を更新
 		}
 		if (error2 < dx)
 		{
-			error += dx;
-			line->y0 += sy;
+			error += dx; // 誤差を更新
+			line->y0 += sy; // 座標を更新
 		}
 	}
 }
@@ -124,43 +124,45 @@ void	draw_map(t_data *img, t_map *map, t_program *program)
 	t_line	line;
 	const int	win_center_x = 1920 / 2;
 	const int	win_center_y = 1080 / 2;
-	int	map_center_x;
-	int	map_center_y;
 	double	x0;
 	double	y0;
 
 	i = 0;
-	map_center_x = ((map->width[0] - 1) * program->scale) / 2;
-	map_center_y = ((map->height - 1) * program->scale) / 2;
 	while (i < map->height)
 	{
 		j = 0;
 		while (j < map->width[i])
 		{
-			program->projected_x = j * cos(program->angle_x) - i * sin(program->angle_x);
-			program->projected_y = -map->z_value[i][j][0] + (j * sin(program->angle_y) + i * cos(program->angle_y));
-			x0 = (program->projected_x * program->scale) + win_center_x + program->offset_x;
-			y0 = (program->projected_y * program->scale) + win_center_y + program->offset_y;
+			program->projected_x = (j - i) * cos(MY_PI / 6);
+			program->projected_y = (j + i) * sin(MY_PI / 6);
+			program->rotate_x = program->projected_x * cos(program->angle_x) - program->projected_y * sin(program->angle_x);
+			program->rotate_y = program->projected_y * cos(program->angle_y) + program->projected_x * sin(program->angle_y) - map->z_value[i][j][0];
+			x0 = (program->rotate_x * program->scale) + win_center_x + program->offset_x;
+			y0 = (program->rotate_y * program->scale) + win_center_y + program->offset_y;
 			line.x0 = x0;
 			line.y0 = y0;
 			line.color = map->z_value[i][j][1];
 			my_mlx_pixel_put(img, line.x0, line.y0, line.color);
 			if (j < map->width[i] - 1)
 			{
-				program->projected_x = (j + 1) * cos(program->angle_x) - i * sin(program->angle_x);
-				program->projected_y = -map->z_value[i][j + 1][0] + ((j + 1) * sin(program->angle_y) + i * cos(program->angle_y));
-				line.x1 = (program->projected_x * program->scale) + win_center_x + program->offset_x;
-				line.y1 = (program->projected_y * program->scale) + win_center_y + program->offset_y;
+				program->projected_x = ((j + 1) - i) * cos(MY_PI / 6);
+				program->projected_y = ((j + 1) + i) * sin(MY_PI / 6);
+				program->rotate_x = program->projected_x * cos(program->angle_x) - program->projected_y * sin(program->angle_x);
+				program->rotate_y = program->projected_y * cos(program->angle_y) + program->projected_x * sin(program->angle_y) - map->z_value[i][j + 1][0];
+				line.x1 = (program->rotate_x * program->scale) + win_center_x + program->offset_x;
+				line.y1 = (program->rotate_y * program->scale) + win_center_y + program->offset_y;
 				draw_line(img, &line);
 			}
 			if (i < map->height - 1)
 			{
 				line.x0 = x0;
 				line.y0 = y0;
-				program->projected_x = j * cos(program->angle_x) - (i + 1) * sin(program->angle_x);
-				program->projected_y = -map->z_value[i + 1][j][0] + (j * sin(program->angle_y) + (i + 1) * cos(program->angle_y));
-				line.x1 = (program->projected_x * program->scale) + win_center_x + program->offset_x;
-				line.y1 = (program->projected_y * program->scale) + win_center_y + program->offset_y;
+				program->projected_x = (j - (i + 1)) * cos(MY_PI / 6);
+				program->projected_y = (j + (i + 1)) * sin(MY_PI / 6);
+				program->rotate_x = program->projected_x * cos(program->angle_x) - program->projected_y * sin(program->angle_x);
+				program->rotate_y = program->projected_y * cos(program->angle_y) + program->projected_x * sin(program->angle_y) - map->z_value[i + 1][j][0];
+				line.x1 = (program->rotate_x * program->scale) + win_center_x + program->offset_x;
+				line.y1 = (program->rotate_y * program->scale) + win_center_y + program->offset_y;
 				draw_line(img, &line);
 			}
 			j++;
@@ -437,12 +439,13 @@ t_program	*init_program(t_program	**program, t_vars *vars, t_data *img)
 		return (NULL);
 	(*program)->vars = vars;
 	(*program)->img = img;
-	(*program)->scale = 2;
+	(*program)->scale = 20;
 	(*program)->offset_x = 0;
 	(*program)->offset_y = 0;
-	(*program)->angle_x = MY_PI / 6;
-	(*program)->angle_y = MY_PI / 6;
-	(*program)->angle_z = 0.0;
+	(*program)->angle_x = 0;
+	(*program)->angle_y = 0;
+	(*program)->rotate_x = 0;
+	(*program)->rotate_y = 0;
 	(*program)->projected_x = 0.0;
 	(*program)->projected_y = 0.0;
 	return (*program);
@@ -524,13 +527,12 @@ int	main(int ac, char **av)
 		j = 0;
 		while (j < wc)
 		{
-			program->map->z_value[i][j] = malloc(sizeof(int) * 2); // 高さと色の分をmallocする
+			program->map->z_value[i][j] = malloc(sizeof(int) * 2);
 			if (!program->map->z_value[i][j])
 			{
 				all_free(NULL, program->map, array, line);
 				return (1);
 			}
-			// 高さと色の情報を入れていく
 			if (array[j])
 			{
 				if (!ft_strchr(array[j], ','))
