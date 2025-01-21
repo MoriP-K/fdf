@@ -6,11 +6,11 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/09 20:23:33 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/01/19 22:13:12 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/01/21 22:02:05 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "mlx_linux/mlx.h"
+#include "minilibx-linux/mlx.h"
 #include "types.h"
 #include "keycode.h"
 #include "gnl/get_next_line.h"
@@ -23,38 +23,10 @@
 
 void	my_mlx_pixel_put(t_data *data, int x, int y, int color)
 {
-	char	*dst;
-
-	if (0 <= x && x < 1920 && 0 <= y && y < 1080)
-	{
-		dst = data->addr + (y * data->line_length + x * (data->bits_per_pixel / 8));
-		*(unsigned int*)dst = color;
-	}
-}
-
-int	create_trgb(int t, int r, int g, int b)
-{
-	return (t << 24 | r << 16 | g << 8 | b);
-}
-
-int	get_t(int trgb)
-{
-	return ((trgb >> 24) & 0xFF);
-}
-
-int	get_r(int trgb)
-{
-	return ((trgb >> 16) & 0xFF);
-}
-
-int	get_g(int trgb)
-{
-	return ((trgb >> 8) & 0xFF);
-}
-
-int	get_b(int trgb)
-{
-	return (trgb & 0xFF);
+	if ((unsigned int)x >= WIN_WIDTH || (unsigned int)y >= WIN_HEIGHT)
+		return ;
+	*(unsigned int *)(data->addr +
+		(y * data->line_length + x * (data->bits_per_pixel / 8))) = color;
 }
 
 unsigned int	hex_to_int(const char *hex_str)
@@ -78,42 +50,47 @@ unsigned int	hex_to_int(const char *hex_str)
 	return (num);
 }
 
+void	next_coordinate(t_coordinate *coordinate, t_line *line, int *error, int *error2)
+{
+	*error2 = *error * 2; // 次の移動方向を決めるために誤差値を2倍する
+	if (*error2 > -coordinate->dy)
+	{
+		*error -= coordinate->dy; // 誤差を更新
+		line->x0 += coordinate->sx; // 座標を更新
+	}
+	if (*error2 < coordinate->dx)
+	{
+		*error += coordinate->dx; // 誤差を更新
+		line->y0 += coordinate->sy; // 座標を更新
+	}
+}
+
 void	draw_line(t_data *data, t_line *line)
 {
-	int	dx;
-	int	dy;
-	int	sx;
-	int	sy;
-	int	error;
-	int	error2;
+	t_coordinate	coordinate;
+	int				error;
+	int				error2;
 
-	dx = abs(line->x1 - line->x0); // ｘ方向の距離
-	dy = abs(line->y1 - line->y0); // ｙ方向の距離
+	if ((line->x0 < 0 && line->x1 < 0) || (line->x0 >= WIN_WIDTH && line->x1 >= WIN_WIDTH) ||
+		(line->y0 < 0 && line->y1 < 0) || (line->y0 >= WIN_HEIGHT && line->y1 >= WIN_HEIGHT))
+		return ;
+	coordinate.dx = abs(line->x1 - line->x0); // ｘ方向の距離
+	coordinate.dy = abs(line->y1 - line->y0); // ｙ方向の距離
 	if (line->x0 < line->x1)
-		sx = 1; // 右に進む
+		coordinate.sx = 1; // 右に進む
 	else
-		sx = -1; // 左に進む
+		coordinate.sx = -1; // 左に進む
 	if (line->y0 < line->y1)
-		sy = 1; // 下に進む
+		coordinate.sy = 1; // 下に進む
 	else
-		sy = -1; // 上に進む
-	error = dx - dy; // 誤差の初期値を設定
+		coordinate.sy = -1; // 上に進む
+	error = coordinate.dx - coordinate.dy; // 誤差の初期値を設定
 	while (1)
 	{
 		my_mlx_pixel_put(data, line->x0, line->y0, line->color);
 		if (line->x0 == line->x1 && line->y0 == line->y1)
 			break ;
-		error2 = error * 2; // 次の移動方向を決めるために誤差値を2倍する
-		if (error2 > -dy)
-		{
-			error -= dy; // 誤差を更新
-			line->x0 += sx; // 座標を更新
-		}
-		if (error2 < dx)
-		{
-			error += dx; // 誤差を更新
-			line->y0 += sy; // 座標を更新
-		}
+		next_coordinate(&coordinate, line, &error, &error2);
 	}
 }
 
@@ -122,19 +99,16 @@ void	rotate_point(t_program *program, double *x, double *y, double *z)
 	double	temp_x;
 	double	temp_y;
 	double	temp_z;
-
 	// rotate X axis
 	temp_y = *y * cos(program->angle_x) - *z * sin(program->angle_x);
 	temp_z = *y * sin(program->angle_x) + *z * cos(program->angle_x);
 	*y = temp_y;
 	*z = temp_z;
-
 	// rotate Y axis
 	temp_x = *x * cos(program->angle_y) + *z * sin(program->angle_y);
 	temp_z = -*x * sin(program->angle_y) + *z * cos(program->angle_y);
 	*x = temp_x;
 	*z = temp_z;
-
 	// rotate Z axis
 	temp_x = *x * cos(program->angle_z) - *y * sin(program->angle_z);
 	temp_y = *x * sin(program->angle_z) + *y * cos(program->angle_z);
@@ -147,14 +121,12 @@ void	draw_map(t_data *img, t_map *map, t_program *program)
 	int	i;
 	int	j;
 	t_line	line;
-	const int	win_center_x = 1920 / 2;
-	const int	win_center_y = 1080 / 2;
-	double	screen_x;
-	double	screen_y;
-	double	x;
-	double	y;
-	double	z;
-	const double	height_factor = sqrt(2.0) / sqrt(3.0);
+	double	screen_x; // 3D座標を2D画面上に投影した位置
+	double	screen_y; //
+	double	x; // 3D空間での座標位置
+	double	y; //
+	double	z; //
+	const double	height_factor = sqrt(2.0) / sqrt(3.0); // 高さの係数（等角投影のための調整値）
 
 	i = 0;
 	while (i < map->height)
@@ -162,34 +134,38 @@ void	draw_map(t_data *img, t_map *map, t_program *program)
 		j = 0;
 		while (j < map->width[i])
 		{
-			x = (j - i) * cos(MY_PI / 6);
-			y = (j + i) * sin(MY_PI / 6);
-			z = map->z_value[i][j][0] * height_factor;
+			// 等角投影のための計算
+			x = (j - i) * program->cos; // x座標の計算
+			y = (j + i) * program->sin; // y座標の計算
+			z = map->z_value[i][j][0] * height_factor; // 高さ情報に係数を掛けて実際の3D座標に変換
 			rotate_point(program, &x, &y, &z);
-			screen_x = (x * program->scale) + win_center_x + program->offset_x;
-			screen_y = (y * program->scale) + win_center_y + program->offset_y;
-			line.x0 = screen_x;
-			line.y0 = screen_y;
+			// 3D座標を2D画面上の位置に変換
+			// x座標 × 拡大率 + 画面中央 + xオフセット
+			screen_x = (x * program->scale) + WIN_CENTER_X + program->offset_x;
+			// y座標 × 拡大率 + 画面中央 + yオフセット
+			screen_y = (y * program->scale) + WIN_CENTER_Y + program->offset_y;
+			line.x0 = screen_x; // 現在の点のx座標
+			line.y0 = screen_y; // 現在の点のy座標
 			line.color = map->z_value[i][j][1];
 			my_mlx_pixel_put(img, line.x0, line.y0, line.color);
-			if (j < map->width[i] - 1)
+			if (j < map->width[i] - 1) // 横方向（右）への線を描画
 			{
-				x = ((j + 1) - i) * cos(MY_PI / 6);
-				y = ((j + 1) + i) * sin(MY_PI / 6);
-				z = map->z_value[i][j + 1][0] * height_factor;
+				x = ((j + 1) - i) * program->cos; // 次の点（右）のx座標
+				y = ((j + 1) + i) * program->sin; // 次の点（右）のy座標
+				z = map->z_value[i][j + 1][0] * height_factor; // 次の点の高さ
 				rotate_point(program, &x, &y, &z);
-				line.x1 = (x * program->scale) + win_center_x + program->offset_x;
-				line.y1 = (y * program->scale) + win_center_y + program->offset_y;
+				line.x1 = (x * program->scale) + WIN_CENTER_X + program->offset_x; // 右隣の点のx座標
+				line.y1 = (y * program->scale) + WIN_CENTER_Y + program->offset_y; // 右隣の点のy座標
 				draw_line(img, &line);
 			}
-			if (i < map->height - 1)
+			if (i < map->height - 1) // 縦方向（下）への線を描画
 			{
-				x = (j - (i + 1)) * cos(MY_PI / 6);
-				y = (j + (i + 1)) * sin(MY_PI / 6);
-				z = map->z_value[i + 1][j][0] * height_factor;
+				x = (j - (i + 1)) * program->cos; // 下の点のx座標
+				y = (j + (i + 1)) * program->sin;  // 下の点のy座標
+				z = map->z_value[i + 1][j][0] * height_factor; // 下の点の高さ
 				rotate_point(program, &x, &y, &z);
-				line.x1 = (x * program->scale) + win_center_x + program->offset_x;
-				line.y1 = (y * program->scale) + win_center_y + program->offset_y;
+				line.x1 = (x * program->scale) + WIN_CENTER_X + program->offset_x; // 下の点のx座標
+				line.y1 = (y * program->scale) + WIN_CENTER_Y + program->offset_y; // 下の点のy座標
 				draw_line(img, &line);
 			}
 			j++;
@@ -267,10 +243,8 @@ t_map	*get_map_size(t_map *map, char *file, int fd)
 			break ;
 		map->width[i] = count_word(line, ' ');
 		free(line);
-		// printf("width[%d]: %d\n", i, map->width[i]);
 		i++;
 	}
-	// printf("height: %d\n", map->height);
 	close(fd);
 	return (map);
 }
@@ -295,23 +269,18 @@ void	free_map(t_map *map)
 	
 	if (!map)
 		return ;
-	i = 0;
+	i = -1;
 	if (map->z_value)
 	{
-		while (i < map->height)
+		while (++i < map->height)
 		{
 			if (map->z_value[i])
 			{
-				j = 0;
-				while (j < map->width[i])
-				{
-					if (map->z_value[i][j])
-						free(map->z_value[i][j]);
-					j++;
-				}
+				j = -1;
+				while (++j < map->width[i] && map->z_value[i][j])
+					free(map->z_value[i][j]);
 				free(map->z_value[i]);
 			}
-			i++;
 		}
 		free(map->z_value);
 	}
@@ -346,36 +315,6 @@ t_map	*init_map(t_map *map, char *file, int fd)
 	return (map);
 }
 
-void	display_map(t_map *map)
-{
-	int	i;
-	int	j;
-
-	if (!map)
-    {
-        printf("Map is NULL\n");
-        return;
-    }
-    printf("Z-values and colors:\n");
-	printf("Map dimensions: height = %d\n", map->height);
-	i = 0;
-	while (i < map->height)
-	{
-		j = 0;
-		while (j < map->width[i])
-		{
-			printf("width = %d ", map->width[i]);
-			if (map->z_value && map->z_value[i] && map->z_value[i][j])
-                printf("[%d, %d] \n", map->z_value[i][j][0], map->z_value[i][j][1]);
-            else
-                printf("[NULL] ");
-			j++;
-		}
-		printf("\n");
-		i++;
-	}
-}
-
 void	cleanup_mlx(t_program *program)
 {
 	if (!program)
@@ -385,12 +324,59 @@ void	cleanup_mlx(t_program *program)
 	if (program->vars && program->vars->win)
 		mlx_destroy_window(program->vars->mlx, program->vars->win);
 	if (program->vars && program->vars->mlx)
+	{
+		mlx_destroy_display(program->vars->mlx);
 		free(program->vars->mlx);
+	}
 }
 
 void	clear_image(t_data *img)
 {
 	ft_memset(img->addr, 0, 1920 * 1080 * (img->bits_per_pixel / 8));
+}
+
+void	zoomzoom(t_program *program, int keycode)
+{
+	if (keycode == PLUS_KEY)
+	{
+		program->scale += 3;
+		if (program->scale > 1000)
+			program->scale = 1000;
+	}
+	else if (keycode == MINUS_KEY)
+	{
+		program->scale -= 3;
+		if (program->scale < 2)
+			program->scale = 2;
+	}
+}
+
+void	wasd(t_program *program, int keycode)
+{
+	if (keycode == W_KEY)
+		program->offset_y += 5;
+	else if (keycode == S_KEY)
+		program->offset_y -= 5;
+	else if (keycode == D_KEY)
+		program->offset_x -= 5;
+	else if (keycode == A_KEY)
+		program->offset_x += 5;
+}
+
+void	rotate_axis(t_program *program, int keycode)
+{
+	if (keycode == ARROW_RIGHT)
+		program->angle_y -= 0.1;
+	else if (keycode == ARROW_LEFT)
+		program->angle_y += 0.1;
+	else if (keycode == ARROW_DOWN)
+		program->angle_x -= 0.1;
+	else if (keycode == ARROW_UP)
+		program->angle_x += 0.1;
+	else if (keycode == X_KEY)
+		program->angle_z -= 0.1;
+	else if (keycode == Z_KEY)
+		program->angle_z += 0.1;
 }
 
 int	 key_hook(int keycode, t_vars *vars)
@@ -407,38 +393,13 @@ int	 key_hook(int keycode, t_vars *vars)
 			all_free(program, NULL, NULL, NULL);
 		exit(0);
 	}
-	else if (keycode == PLUS_KEY)
-	{
-		program->scale += 3;
-		if (program->scale > 1000)
-			program->scale = 1000;
-	}
-	else if (keycode == MINUS_KEY)
-	{
-		program->scale -= 2;
-		if (program->scale < 2)
-			program->scale = 2;
-	}
-	else if (keycode == W_KEY)
-		program->offset_y += 5;
-	else if (keycode == S_KEY)
-		program->offset_y -= 5;
-	else if (keycode == D_KEY)
-		program->offset_x -= 5;
-	else if (keycode == A_KEY)
-		program->offset_x += 5;
-	else if (keycode == ARROW_RIGHT)
-		program->angle_y -= 0.1;
-	else if (keycode == ARROW_LEFT)
-		program->angle_y += 0.1;
-	else if (keycode == ARROW_DOWN)
-		program->angle_x -= 0.1;
-	else if (keycode == ARROW_UP)
-		program->angle_x += 0.1;
-	else if (keycode == X_KEY)
-		program->angle_z -= 0.1;
-	else if (keycode == Z_KEY)
-		program->angle_z += 0.1;
+	else if (keycode == PLUS_KEY || keycode == MINUS_KEY)
+		zoomzoom(program, keycode);
+	else if (keycode == W_KEY || keycode == A_KEY || keycode == S_KEY || keycode == D_KEY)
+		wasd(program, keycode);
+	else if (keycode == ARROW_RIGHT || keycode == ARROW_LEFT || keycode == ARROW_DOWN ||
+		keycode == ARROW_UP || keycode == X_KEY || keycode == Z_KEY)
+		rotate_axis(program, keycode);
 	clear_image(program->img);
 	draw_map(program->img, program->map, program);
 	mlx_put_image_to_window(program->vars->mlx, program->vars->win, program->img->img, 0, 0);
@@ -457,7 +418,6 @@ int	close_window(t_vars *vars)
 	else
 		all_free(program, NULL, NULL, NULL);
 	exit(0);
-	return (0);
 }
 
 t_program	*init_program(t_program	**program, t_vars *vars, t_data *img)
@@ -467,7 +427,7 @@ t_program	*init_program(t_program	**program, t_vars *vars, t_data *img)
 		return (NULL);
 	(*program)->vars = vars;
 	(*program)->img = img;
-	(*program)->scale = 20;
+	(*program)->scale = 10;
 	(*program)->offset_x = 0;
 	(*program)->offset_y = 0;
 	(*program)->angle_x = 0;
@@ -478,7 +438,47 @@ t_program	*init_program(t_program	**program, t_vars *vars, t_data *img)
 	(*program)->rotate_z = 0;
 	(*program)->projected_x = 0.0;
 	(*program)->projected_y = 0.0;
+	(*program)->cos = cos(MY_PI / 6);
+	(*program)->sin = sin(MY_PI / 6);
 	return (*program);
+}
+
+int	validate_arg(char *file_name)
+{
+	int	len;
+
+	len = ft_strlen(file_name);
+	len--;
+	if (file_name[len - 3] == '.' && file_name[len - 2] == 'f' &&
+		file_name[len - 1] == 'd' && file_name[len] == 'f')
+		return (1);
+	else
+		return (0);
+}
+
+int	ready_for_mlx(t_program *program, t_vars *vars, t_data *img)
+{
+	vars->mlx = mlx_init();
+	if (!vars->mlx)
+	{
+		all_free(program, program->map, NULL, NULL);
+		return (0);
+	}
+	vars->win = mlx_new_window(vars->mlx, 1920, 1080, vars->title);
+	if (!vars->win)
+	{
+		all_free(program, program->map, NULL, NULL);
+		cleanup_mlx(program);
+		return (0);
+	}
+	img->img = mlx_new_image(vars->mlx, 1920, 1080);
+	if (!img->img)
+	{
+		all_free(program, program->map, NULL, NULL);
+		cleanup_mlx(program);
+		return (0);
+	}
+	return (1);
 }
 
 int	main(int ac, char **av)
@@ -496,9 +496,13 @@ int	main(int ac, char **av)
 	int			j;
 	int			wc;
 
-	printf("*");
 	if (ac > 2)
 		return (1);
+	if (!validate_arg(av[1]))
+	{
+		write(1, "Invalid Argument.\n", 18);
+		return (1);
+	}
 	program = init_program(&program, &vars, &img);
 	if (!program)
 		return (1);
@@ -532,13 +536,13 @@ int	main(int ac, char **av)
 		line = get_next_line(fd);
 		if (!line)
 		{
-			// printf("\n");
+			printf("\n");
 			break ;
 		}
 		wc = count_word(line, ' ');
-		// printf("\nline[%d] = %s", i, line);
-		// if (!ft_strchr(line, '\n'))
-		// 	printf("\n");
+		printf("\nline[%d] = %s", i, line);
+		if (!ft_strchr(line, '\n'))
+			printf("\n");
 		array = ft_split(line, ' ');
 		if (!array)
 		{
@@ -565,7 +569,7 @@ int	main(int ac, char **av)
 				if (!ft_strchr(array[j], ','))
 				{
 					program->map->z_value[i][j][0] = ft_atoi(array[j]); 
-					program->map->z_value[i][j][1] = hex_to_int("0x00FFFFFF");
+					program->map->z_value[i][j][1] = 0x0000FFFF;
 				}
 				else
 				{
@@ -580,11 +584,11 @@ int	main(int ac, char **av)
 						(split_arr[1][1] == 'x' || split_arr[1][1] == 'X'))
 						program->map->z_value[i][j][1] = hex_to_int(split_arr[1] + 2);
 					else
-						program->map->z_value[i][j][1] = hex_to_int("0x00FFFFFF");
+						program->map->z_value[i][j][1] = 0x00FFFF00;
 					all_free(NULL, NULL, split_arr, NULL);
 				}
-				// printf("z_value[%d][%d] = h:%d, c: %d\n", i, j, program->map->z_value[i][j][0], program->map->z_value[i][j][1]);
-				printf(".");
+				printf("z_value[%d][%d] = h:%d, c: %d\n", i, j, program->map->z_value[i][j][0], program->map->z_value[i][j][1]);
+				// printf(".");
 			}
 			j++;
 		}
@@ -593,24 +597,9 @@ int	main(int ac, char **av)
 	}
 	close(fd);
 
-	vars.mlx = mlx_init();
-	if (!vars.mlx)
+	if (!ready_for_mlx(program, &vars, &img))
 	{
-		all_free(program, program->map, NULL, NULL);
-		return (1);
-	}
-	vars.win = mlx_new_window(vars.mlx, 1920, 1080, av[1]);
-	if (!vars.win)
-	{
-		all_free(program, program->map, NULL, NULL);
-		cleanup_mlx(program);
-		return (1);
-	}
-	img.img = mlx_new_image(vars.mlx, 1920, 1080);
-	if (!img.img)
-	{
-		all_free(program, program->map, NULL, NULL);
-		cleanup_mlx(program);
+		write(1, "Error\n", 6);
 		return (1);
 	}
 	img.addr = mlx_get_data_addr(img.img, &img.bits_per_pixel, &img.line_length, &img.endian);
@@ -620,8 +609,6 @@ int	main(int ac, char **av)
 	mlx_hook(vars.win, 2, 1L<<0, key_hook, &vars);
 	mlx_hook(vars.win, 17, 0, close_window, &vars);
 	mlx_loop(vars.mlx);
-	// display structure
-	// printf("\nFinal structure:\n");
-	// display_map(map);
+	cleanup_mlx(program);
 	all_free(program, program->map, NULL, NULL);
 }

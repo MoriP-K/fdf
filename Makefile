@@ -9,8 +9,8 @@ SRCS = fdf.c \
 
 OBJS = $(SRCS:.c=.o)
 
-MLX_PATH = ./mlx_linux
-MLX_NAME = $(MLX_PATH)/libmlx.a
+MLX_PATH = ./minilibx-linux
+MLX_NAME = $(MLX_PATH)/minilibx.a
 MLX_FLAGS = -lXext -lX11 -lm -lz
 
 LIBFT_DIR = ./libft

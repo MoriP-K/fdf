@@ -6,14 +6,19 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 15:04:39 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/01/19 21:15:35 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/01/21 22:08:29 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef TYPES_H
 # define TYPES_H
 # include <stdlib.h>
+# include <math.h>
 # define MY_PI 3.141592653589793238462643
+# define WIN_HEIGHT 1080
+# define WIN_WIDTH 1920
+# define WIN_CENTER_Y 960
+# define WIN_CENTER_X 540
 
 typedef struct s_program t_program;
 typedef struct s_vars t_vars;
@@ -37,6 +42,8 @@ typedef struct	s_program
 	double		rotate_z;
 	double		projected_x;
 	double		projected_y;
+	double		cos;
+	double		sin;
 }				t_program;
 
 typedef struct	s_vars
@@ -54,7 +61,6 @@ typedef struct	s_data
 	int			bits_per_pixel;
 	int			line_length;
 	int			endian;
-	t_map		**map;
 }				t_data;
 
 typedef struct	s_map
@@ -72,5 +78,13 @@ typedef struct	s_line
 	int			y1;
 	int			color;
 }				t_line;
+
+typedef struct	s_coordinate
+{
+	int			dx;
+	int			dy;
+	int			sx;
+	int			sy;
+}				t_coordinate;
 
 #endif
