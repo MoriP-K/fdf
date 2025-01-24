@@ -4,8 +4,7 @@ CFLAGS = -Werror -Wall -Wextra -I. -I$(MLX_PATH) -I$(LIBFT_DIR) -fsanitize=undef
 
 NAME = fdf
 
-SRCS = fdf.c \
-		gnl/get_next_line.c gnl/get_next_line_utils.c
+SRCS = fdf.c gnl/get_next_line.c
 
 OBJS = $(SRCS:.c=.o)
 
@@ -46,4 +45,7 @@ re: fclean all
 rr:
 	make re && make clean
 
-.PHONY: all clean fclean re rr
+bonus: all
+# bonus用に全ファイルに"_bonus"をつけたファイルを作成する
+
+.PHONY: all clean fclean re rr bonus

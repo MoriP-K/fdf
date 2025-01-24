@@ -6,7 +6,7 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/09 20:23:33 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/01/21 22:02:05 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/01/24 22:19:05 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,21 +99,25 @@ void	rotate_point(t_program *program, double *x, double *y, double *z)
 	double	temp_x;
 	double	temp_y;
 	double	temp_z;
-	// rotate X axis
-	temp_y = *y * cos(program->angle_x) - *z * sin(program->angle_x);
-	temp_z = *y * sin(program->angle_x) + *z * cos(program->angle_x);
-	*y = temp_y;
-	*z = temp_z;
-	// rotate Y axis
-	temp_x = *x * cos(program->angle_y) + *z * sin(program->angle_y);
-	temp_z = -*x * sin(program->angle_y) + *z * cos(program->angle_y);
-	*x = temp_x;
-	*z = temp_z;
-	// rotate Z axis
-	temp_x = *x * cos(program->angle_z) - *y * sin(program->angle_z);
-	temp_y = *x * sin(program->angle_z) + *y * cos(program->angle_z);
+
+	temp_x = *x;
+	temp_y = *x * 0 + *y * cos(program->angle_x) - *z * sin(program->angle_x);
+	temp_z = *x * 0 + *y * sin(program->angle_x) + *z * cos(program->angle_x);
 	*x = temp_x;
 	*y = temp_y;
+	*z = temp_z;
+	temp_x = *x * cos(program->angle_y) + *y * 0 + *z * sin(program->angle_y);
+	temp_y = *y;
+	temp_z = -*x * sin(program->angle_y) + *y * 0 + *z * cos(program->angle_y);
+	*x = temp_x;
+	*y = temp_y;
+	*z = temp_z;
+	temp_x = *x * cos(program->angle_z) - *y * sin(program->angle_z) + *z * 0;
+	temp_y = *x * sin(program->angle_z) + *y * cos(program->angle_z) + *z * 0;
+	temp_z = *z;
+	*x = temp_x;
+	*y = temp_y;
+	*z = temp_z;
 }
 
 void	draw_map(t_data *img, t_map *map, t_program *program)
@@ -144,12 +148,12 @@ void	draw_map(t_data *img, t_map *map, t_program *program)
 			screen_x = (x * program->scale) + WIN_CENTER_X + program->offset_x;
 			// y座標 × 拡大率 + 画面中央 + yオフセット
 			screen_y = (y * program->scale) + WIN_CENTER_Y + program->offset_y;
-			line.x0 = screen_x; // 現在の点のx座標
-			line.y0 = screen_y; // 現在の点のy座標
 			line.color = map->z_value[i][j][1];
-			my_mlx_pixel_put(img, line.x0, line.y0, line.color);
+			// my_mlx_pixel_put(img, line.x0, line.y0, line.color);
 			if (j < map->width[i] - 1) // 横方向（右）への線を描画
 			{
+				line.x0 = screen_x; // 現在の点のx座標
+				line.y0 = screen_y; // 現在の点のy座標
 				x = ((j + 1) - i) * program->cos; // 次の点（右）のx座標
 				y = ((j + 1) + i) * program->sin; // 次の点（右）のy座標
 				z = map->z_value[i][j + 1][0] * height_factor; // 次の点の高さ
@@ -160,6 +164,8 @@ void	draw_map(t_data *img, t_map *map, t_program *program)
 			}
 			if (i < map->height - 1) // 縦方向（下）への線を描画
 			{
+				line.x0 = screen_x; // 現在の点のx座標
+				line.y0 = screen_y; // 現在の点のy座標
 				x = (j - (i + 1)) * program->cos; // 下の点のx座標
 				y = (j + (i + 1)) * program->sin;  // 下の点のy座標
 				z = map->z_value[i + 1][j][0] * height_factor; // 下の点の高さ
@@ -433,13 +439,10 @@ t_program	*init_program(t_program	**program, t_vars *vars, t_data *img)
 	(*program)->angle_x = 0;
 	(*program)->angle_y = 0;
 	(*program)->angle_z = 0;
-	(*program)->rotate_x = 0;
-	(*program)->rotate_y = 0;
-	(*program)->rotate_z = 0;
 	(*program)->projected_x = 0.0;
 	(*program)->projected_y = 0.0;
-	(*program)->cos = cos(MY_PI / 6);
-	(*program)->sin = sin(MY_PI / 6);
+	(*program)->cos = cos(M_PI / 6);
+	(*program)->sin = sin(M_PI / 6);
 	return (*program);
 }
 
@@ -588,7 +591,6 @@ int	main(int ac, char **av)
 					all_free(NULL, NULL, split_arr, NULL);
 				}
 				printf("z_value[%d][%d] = h:%d, c: %d\n", i, j, program->map->z_value[i][j][0], program->map->z_value[i][j][1]);
-				// printf(".");
 			}
 			j++;
 		}

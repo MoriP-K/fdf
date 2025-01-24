@@ -6,7 +6,7 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 15:04:39 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/01/21 22:08:29 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/01/24 22:19:33 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,6 @@
 # define TYPES_H
 # include <stdlib.h>
 # include <math.h>
-# define MY_PI 3.141592653589793238462643
 # define WIN_HEIGHT 1080
 # define WIN_WIDTH 1920
 # define WIN_CENTER_Y 960
@@ -26,8 +25,16 @@ typedef struct s_data t_data;
 typedef struct s_map t_map;
 typedef struct s_line t_line;
 
+// typedef struct	s_window
+// {
+// 	t_vars		*vars;
+// 	t_data		*img;
+// }				t_window;
+
 typedef struct	s_program
 {
+	// t_window	*window;
+	
 	t_vars		*vars;
 	t_data		*img;
 	t_map		*map;
@@ -37,9 +44,6 @@ typedef struct	s_program
 	double		angle_x;
 	double		angle_y;
 	double		angle_z;
-	double		rotate_x;
-	double		rotate_y;
-	double		rotate_z;
 	double		projected_x;
 	double		projected_y;
 	double		cos;
