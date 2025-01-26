@@ -6,7 +6,7 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/09 20:23:33 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/01/24 22:19:05 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/01/26 17:05:46 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,9 +106,9 @@ void	rotate_point(t_program *program, double *x, double *y, double *z)
 	*x = temp_x;
 	*y = temp_y;
 	*z = temp_z;
-	temp_x = *x * cos(program->angle_y) + *y * 0 + *z * sin(program->angle_y);
+	temp_x = *x * cos(program->angle_y) + *y * 0 - *z * sin(program->angle_y);
 	temp_y = *y;
-	temp_z = -*x * sin(program->angle_y) + *y * 0 + *z * cos(program->angle_y);
+	temp_z = *x * sin(program->angle_y) + *y * 0 + *z * cos(program->angle_y);
 	*x = temp_x;
 	*y = temp_y;
 	*z = temp_z;
@@ -144,12 +144,9 @@ void	draw_map(t_data *img, t_map *map, t_program *program)
 			z = map->z_value[i][j][0] * height_factor; // 高さ情報に係数を掛けて実際の3D座標に変換
 			rotate_point(program, &x, &y, &z);
 			// 3D座標を2D画面上の位置に変換
-			// x座標 × 拡大率 + 画面中央 + xオフセット
 			screen_x = (x * program->scale) + WIN_CENTER_X + program->offset_x;
-			// y座標 × 拡大率 + 画面中央 + yオフセット
 			screen_y = (y * program->scale) + WIN_CENTER_Y + program->offset_y;
 			line.color = map->z_value[i][j][1];
-			// my_mlx_pixel_put(img, line.x0, line.y0, line.color);
 			if (j < map->width[i] - 1) // 横方向（右）への線を描画
 			{
 				line.x0 = screen_x; // 現在の点のx座標
@@ -446,10 +443,12 @@ t_program	*init_program(t_program	**program, t_vars *vars, t_data *img)
 	return (*program);
 }
 
-int	validate_arg(char *file_name)
+int	validate_arg(int ac, char *file_name)
 {
 	int	len;
 
+	if (ac != 2)
+		return (0);
 	len = ft_strlen(file_name);
 	len--;
 	if (file_name[len - 3] == '.' && file_name[len - 2] == 'f' &&
@@ -490,18 +489,18 @@ int	main(int ac, char **av)
 	t_vars		vars;
 	t_data		img;
 
-	int			fd;
-	char		*line;
-	char		**array;
-	char		**split_arr;
-	t_map		*map;
+	int			fd; //
+	char		*line; //
+	char		**array; //
+	char		**split_arr; //
+	t_map		*map; //
 	int			i;
 	int			j;
-	int			wc;
+	int			wc; //
 
 	if (ac > 2)
 		return (1);
-	if (!validate_arg(av[1]))
+	if (!validate_arg(ac, av[1]))
 	{
 		write(1, "Invalid Argument.\n", 18);
 		return (1);
@@ -515,7 +514,7 @@ int	main(int ac, char **av)
 	if (fd == -1)
 	{
 		all_free(program, NULL, NULL, NULL);
-		write(1, "Error\n", 6);
+		write(1, "Error1\n", 7);
 		return (1);
 	}
 	map = NULL;

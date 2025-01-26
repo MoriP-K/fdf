@@ -6,7 +6,7 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 15:04:39 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/01/24 22:19:33 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/01/27 00:14:26 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,28 +16,34 @@
 # include <math.h>
 # define WIN_HEIGHT 1080
 # define WIN_WIDTH 1920
-# define WIN_CENTER_Y 960
-# define WIN_CENTER_X 540
+# define WIN_CENTER_Y 540
+# define WIN_CENTER_X 960
 
-typedef struct s_program t_program;
-typedef struct s_vars t_vars;
-typedef struct s_data t_data;
-typedef struct s_map t_map;
-typedef struct s_line t_line;
+typedef struct s_program	t_program;
+typedef struct s_vars		t_vars;
+typedef struct s_data		t_data;
+typedef struct s_map		t_map;
+typedef struct s_line		t_line;
+typedef struct s_str		t_str;
+typedef struct s_all		t_all;
 
-// typedef struct	s_window
-// {
-// 	t_vars		*vars;
-// 	t_data		*img;
-// }				t_window;
-
-typedef struct	s_program
+typedef struct	s_all
 {
-	// t_window	*window;
-	
+	t_program	*program;
 	t_vars		*vars;
 	t_data		*img;
 	t_map		*map;
+	t_str		*str;
+	int			fd;
+	char		*file;
+}				t_all;
+
+typedef struct	s_program
+{
+	t_vars		*vars;
+	t_data		*img;
+	t_map		*map;
+	int			word_count;
 	int			scale;
 	int			offset_x;
 	int			offset_y;
@@ -69,7 +75,8 @@ typedef struct	s_data
 
 typedef struct	s_map
 {
-	int			*width;
+	int			*check_width;
+	int			width;
 	int			height;
 	int			***z_value;
 }				t_map;
@@ -90,5 +97,12 @@ typedef struct	s_coordinate
 	int			sx;
 	int			sy;
 }				t_coordinate;
+
+typedef struct	s_str
+{
+	char		*line;
+	char		**arr;
+}				t_str;
+
 
 #endif
