@@ -6,7 +6,7 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/25 15:04:54 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/01/27 20:43:39 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/01/27 21:37:38 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -410,16 +410,65 @@ void	read_map_data(t_all *all)
 	close(all->fd);
 }
 
+void	throw_error(int error_no)
+{
+	if (error_no == INVALID_ARG)
+		write(2, "Invalid Argument.\n", 18);
+	else if (error_no == PROCESSING)
+		write(1, "Error\n", 6);
+	exit(EXIT_FAILURE);
+}
+
+void	clean_up_mlx(t_all *all)
+{
+	if (!all)
+		return ;
+	if (all->img && all->img->img)
+		mlx_destroy_image(all->vars->mlx, all->img->img);
+	if (all->vars && all->vars->win)
+		mlx_destroy_window(all->vars->mlx, all->vars->win);
+	if (all->vars && all->vars->mlx)
+	{
+		mlx_destroy_display(all->vars->mlx);
+		free(all->vars->mlx);
+	}
+}
+
+int	ready_for_mlx(t_all *all)
+{
+	all->vars->mlx = mlx_init();
+	if (!all->vars->mlx)
+		all_free(all, 1);
+	all->vars->win = mlx_new_window(all->vars->mlx, WIN_WIDTH, WIN_HEIGHT, all->vars->title);
+	if (!all->vars->win)
+	{
+		all_free(all, 0);
+		clean_up_mlx(all);
+		return (0);
+	}
+	all->img->img = mlx_new_image(all->vars->mlx, WIN_WIDTH, WIN_HEIGHT);
+	if (!all->img->img)
+	{
+		all_free(all, 0);
+		clean_up_mlx(all);
+		return (0);
+	}
+	return (1);
+}
+
 int	main(int ac, char **av)
 {
 	t_all	*all;
 
 	if (!validate_arg(ac, av[1]))
-	{
-		write(2, "Invalid Argument.\n", 18);
-		return (1);
-	}
+		throw_error(INVALID_ARG);
 	init_all_structure(&all, av[1]);
 	read_map_data(all);
+	if (!ready_for_mlx(all))
+		throw_error(PROCESSING);
+
+
+		
+	clean_up_mlx(all);
 	all_free(all, 0);
 }

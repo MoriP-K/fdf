@@ -6,7 +6,7 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 15:04:39 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/01/27 00:14:26 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/01/27 20:50:51 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,8 @@
 # define WIN_WIDTH 1920
 # define WIN_CENTER_Y 540
 # define WIN_CENTER_X 960
+# define INVALID_ARG 1
+# define PROCESSING 2
 
 typedef struct s_program	t_program;
 typedef struct s_vars		t_vars;
