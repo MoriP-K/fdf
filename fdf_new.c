@@ -6,7 +6,7 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/25 15:04:54 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/01/27 00:23:37 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/01/27 20:43:39 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,9 +123,6 @@ t_program	*init_program(t_vars *vars, t_data *img, t_map *map)
 	program->img = img;
 	program->map = map;
 	set_default_value(program);
-	// program->map->z_value = malloc(sizeof(int **) * program->map->height);
-	// if (!program->map->z_value)
-	// 	return (NULL);
 	return (program);
 }
 
@@ -215,20 +212,17 @@ int	clean_up_width(int *check)
 
 	width = check[0];
 	free(check);
-	check = NULL;
 	return (width);
 }
 
-int	get_map_width(int fd, char *file, int height, int *check)
+int	get_map_width(int fd, char *file, int height, int **check)
 {
 	char	*line;
 	int		i;
 
 	fd = open(file, O_RDONLY);
-	if (fd == -1)
-		return (-1);
-	check = malloc(sizeof(int) * height);
-	if (!check)
+	*check = malloc(sizeof(int) * height);
+	if (fd == -1 || !*check)
 		return (-1);
 	i = 0;
 	while (1)
@@ -236,26 +230,27 @@ int	get_map_width(int fd, char *file, int height, int *check)
 		line = get_next_line(fd);
 		if (!line)
 			break ;
-		check[i] = count_word(line, ' ');
+		(*check)[i] = count_word(line, ' ');
 		free(line);
-		if (i > 0 && check[i] >= 2 && check[i - 1] != check[i])
+		if (i > 0 && (*check)[i] >= 2 && (*check)[i - 1] != (*check)[i])
+		{
+			free(*check);
+			close(fd);
 			return (-1);
+		}
 		i++;
 	}
 	close(fd);
-	return (clean_up_width(check));
+	return (clean_up_width(*check));
 }
 
 t_map	*get_map_size(t_all *all, t_map *map)
 {
 	map->height = get_map_height(all->fd);
 	map->width = get_map_width(all->fd, all->file, map->height,
-			map->check_width);
+			&map->check_width);
 	if (map->width <= 1 || map->height <= 1)
-	{
-		close(all->fd);
 		return (NULL);
-	}
 	return (map);
 }
 
@@ -266,12 +261,17 @@ t_map	*init_map(t_all *all)
 	map = (t_map *)malloc(sizeof(t_map));
 	if (!map)
 		return (NULL);
-	map = get_map_size(all, map);
-	if (!map)
+	if (!get_map_size(all, map))
+	{
+		free(map);
 		all_free(all, 1);
+	}
 	map->z_value = malloc(sizeof(int **) * map->height);
 	if (!map->z_value)
-		return (NULL);
+	{
+		free(map);
+		all_free(all, 1);
+	}
 	return (map);
 }
 
@@ -280,12 +280,13 @@ void	init_all_structure(t_all **all, char *file)
 	*all = (t_all *)malloc(sizeof(t_all));
 	if (!*all)
 		exit(EXIT_FAILURE);
+	ft_memset(*all, 0, sizeof(t_all));
 	(*all)->fd = open(file, O_RDONLY);
 	if ((*all)->fd == -1)
 		exit (EXIT_FAILURE);
 	(*all)->file = file;
 	(*all)->img = init_data();
-	(*all)->map = init_map((*all));
+	(*all)->map = init_map(*all);
 	(*all)->vars = init_vars((*all)->program, file);
 	(*all)->program = init_program((*all)->vars, (*all)->img, (*all)->map);
 	(*all)->vars->program = (*all)->program;
