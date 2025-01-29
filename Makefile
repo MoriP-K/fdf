@@ -4,7 +4,7 @@ CFLAGS = -Werror -Wall -Wextra -I. -I$(MLX_PATH) -I$(LIBFT_DIR) -fsanitize=undef
 
 NAME = fdf
 
-SRCS = fdf_new.c gnl/get_next_line.c
+SRCS = fdf.c gnl/get_next_line.c
 
 OBJS = $(SRCS:.c=.o)
 

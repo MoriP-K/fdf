@@ -6,7 +6,7 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/17 23:13:21 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/01/19 21:36:51 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/01/28 20:07:03 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,9 @@
 
 // Close window
 # define ESC_KEY 65307
+
+// Reset position
+# define R_KEY 114
 
 // Zoom
 # define PLUS_KEY 61
