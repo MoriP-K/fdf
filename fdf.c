@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   fdf_new.c                                          :+:      :+:    :+:   */
+/*   fdf.c                                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/25 15:04:54 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/01/29 21:27:16 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/01/30 00:03:22 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,10 +23,10 @@
 
 void	my_mlx_pixel_put(t_data *data, int x, int y, int color)
 {
-	if ((unsigned int)x >= WIN_WIDTH || (unsigned int)y >= WIN_HEIGHT)
+	if ((unsigned int)x >= WIN_W || (unsigned int)y >= WIN_H)
 		return ;
-	*(unsigned int *)(data->addr +
-		(y * data->line_length + x * (data->bits_per_pixel / 8))) = color;
+	*(unsigned int *)(data->addr + (y * data->line_length
+		+ x * (data->bits_per_pixel / 8))) = color;
 }
 
 int	validate_arg(int ac, char *file_name)
@@ -292,7 +292,7 @@ t_line	*init_line(void)
 	return (line);
 }
 
-t_point	*init_point()
+t_point	*init_point(void)
 {
 	t_point	*point;
 
@@ -475,7 +475,7 @@ int	ready_for_mlx(t_all *all)
 	all->vars->mlx = mlx_init();
 	if (!all->vars->mlx)
 		all_free(all, 1);
-	all->vars->win = mlx_new_window(all->vars->mlx, WIN_WIDTH, WIN_HEIGHT,
+	all->vars->win = mlx_new_window(all->vars->mlx, WIN_W, WIN_H,
 			all->vars->title);
 	if (!all->vars->win)
 	{
@@ -483,7 +483,7 @@ int	ready_for_mlx(t_all *all)
 		clean_up_mlx(all);
 		return (0);
 	}
-	all->img->img = mlx_new_image(all->vars->mlx, WIN_WIDTH, WIN_HEIGHT);
+	all->img->img = mlx_new_image(all->vars->mlx, WIN_W, WIN_H);
 	if (!all->img->img)
 	{
 		all_free(all, 0);
@@ -508,13 +508,20 @@ void	next_point(t_point *point, t_line *line, int *error, int *error2)
 	}
 }
 
+int	is_draw_window(int x0, int x1, int y0, int y1)
+{
+	if ((x0 < 0 && x1 < 0) || (x0 >= WIN_W && x1 >= WIN_W)
+		|| (y0 < 0 && y1 < 0) || (y0 >= WIN_H && y1 >= WIN_H))
+		return (0);
+	return (1);
+}
+
 void	draw_line(t_all *all, t_line *line)
 {
 	int	error;
 	int	error2;
 
-	if ((line->x0 < 0 && line->x1 < 0) || (line->x0 >= WIN_WIDTH && line->x1 >= WIN_WIDTH) ||
-		(line->y0 < 0 && line->y1 < 0) || (line->y0 >= WIN_HEIGHT && line->y1 >= WIN_HEIGHT))
+	if (!is_draw_window(line->x0, line->x1, line->y0, line->y1))
 		return ;
 	all->point->dx = abs(line->x1 - line->x0);
 	all->point->dy = abs(line->y1 - line->y0);
@@ -551,11 +558,24 @@ void	print_xy(t_point *point)
 	printf("point->y = %f\n", point->y);
 }
 
+void	rotate_xy(t_program *program, double *x, double *y)
+{
+	double	tmp_x;
+	double	tmp_y;
+	// double	tmp_z;
+
+	// (void)*z;
+	tmp_x = *x;
+	tmp_y = *y;
+	*x = tmp_x * cos(program->angle_z) - tmp_y * sin(program->angle_z);
+	*y = tmp_x * sin(program->angle_z) + tmp_y * cos(program->angle_z);
+}
+
 void	draw_map(t_all *all, t_map *map, t_program *program, t_line *line)
 {
-	int	i;
-	int	j;
-	// const double	height_factor = sqrt(2.0) / sqrt(3.0);
+	const double	height_factor = sqrt(2.0) / sqrt(3.0);
+	int				i;
+	int				j;
 
 	i = 0;
 	while (i < map->height)
@@ -563,21 +583,25 @@ void	draw_map(t_all *all, t_map *map, t_program *program, t_line *line)
 		j = 0;
 		while (j < map->width)
 		{
-			all->point->x = (j - map->width / 2);
-			all->point->y = (i - map->height / 2);
-			program->screen_x = (all->point->x * program->scale) + WIN_CENTER_X;
-			program->screen_y = (all->point->y * program->scale) + WIN_CENTER_Y;
+			all->point->x = (j - (map->width - 1) / 2);
+			all->point->y = (i - (map->height - 1) / 2);
+			all->point->z = map->z_value[i][j][0] * height_factor;
+			rotate_xy(program, &all->point->x, &all->point->y);
+			program->screen_x = (all->point->x * program->scale) + WIN_CENTER_X + program->offset_x;
+			program->screen_y = (all->point->y * program->scale) + WIN_CENTER_Y + program->offset_y;
 			line->color = map->z_value[i][j][1];
-			print_xy(all->point);
+			// print_xy(all->point);
 			// draw_line(all, line);
 			if (j < map->width - 1)
 			{
 				line->x0 = program->screen_x;
 				line->y0 = program->screen_y;
-				all->point->x = (j + 1 - map->width / 2);
-				all->point->y = (i - map->height / 2);
-				line->x1 = (all->point->x * program->scale) + WIN_CENTER_X;
-				line->y1 = (all->point->y * program->scale) + WIN_CENTER_Y;
+				all->point->x = (j + 1 - (map->width - 1) / 2);
+				all->point->y = (i - (map->height - 1) / 2);
+				all->point->z = map->z_value[i][j + 1][0] * height_factor;
+				rotate_xy(program, &all->point->x, &all->point->y);
+				line->x1 = (all->point->x * program->scale) + WIN_CENTER_X + program->offset_x;
+				line->y1 = (all->point->y * program->scale) + WIN_CENTER_Y + program->offset_y;
 				// print_line(line);
 				draw_line(all, line);
 			}
@@ -585,10 +609,14 @@ void	draw_map(t_all *all, t_map *map, t_program *program, t_line *line)
 			{
 				line->x0 = program->screen_x;
 				line->y0 = program->screen_y;
-				all->point->x = (j - map->width / 2);
-				all->point->y = (i + 1 - map->height / 2);
-				line->x1 = (all->point->x * program->scale) + WIN_CENTER_X;
-				line->y1 = (all->point->y * program->scale) + WIN_CENTER_Y;
+				all->point->x = (j - (map->width - 1) / 2);
+				all->point->y = (i + 1 - (map->height - 1) / 2);
+				all->point->z = map->z_value[i + 1][j][0] * height_factor;
+				rotate_xy(program, &all->point->x, &all->point->y);
+				line->x1 = (all->point->x * program->scale)
+					+ WIN_CENTER_X + program->offset_x;
+				line->y1 = (all->point->y * program->scale)
+					+ WIN_CENTER_Y + program->offset_y;
 				draw_line(all, line);
 			}
 			j++;
@@ -599,7 +627,7 @@ void	draw_map(t_all *all, t_map *map, t_program *program, t_line *line)
 
 void	clear_image(t_data *img)
 {
-	ft_memset(img->addr, 0, WIN_WIDTH * WIN_HEIGHT * (img->bits_per_pixel / 8));
+	ft_memset(img->addr, 0, WIN_W * WIN_H * (img->bits_per_pixel / 8));
 }
 
 void	zoomzoom(t_program *program, int keycode)
@@ -665,16 +693,19 @@ int	move_fdf(int keycode, t_all *all)
 	}
 	else if (keycode == PLUS_KEY || keycode == MINUS_KEY)
 		zoomzoom(all->program, keycode);
-	else if (keycode == W_KEY || keycode == A_KEY || keycode == S_KEY || keycode == D_KEY)
+	else if (keycode == W_KEY || keycode == A_KEY
+		|| keycode == S_KEY || keycode == D_KEY)
 		wasd(all->program, keycode);
-	else if (keycode == ARROW_RIGHT || keycode == ARROW_LEFT || keycode == ARROW_UP
-		|| keycode == ARROW_DOWN || keycode == X_KEY || keycode == Z_KEY)
+	else if (keycode == ARROW_RIGHT || keycode == ARROW_LEFT
+		|| keycode == ARROW_UP || keycode == ARROW_DOWN
+		|| keycode == X_KEY || keycode == Z_KEY)
 		rotate_axis(all->program, keycode);
 	else if (keycode == R_KEY)
 		reset_position(all->program);
 	clear_image(all->program->img);
 	draw_map(all, all->map, all->program, all->line);
-	mlx_put_image_to_window(all->vars->mlx, all->vars->win, all->img->img, 0, 0);
+	mlx_put_image_to_window(all->vars->mlx, all->vars->win,
+		all->img->img, 0, 0);
 	mlx_string_put(all->vars->mlx, all->vars->win, 10, 10,
 		0x0000FFFF, all->vars->title);
 	return (0);
@@ -696,7 +727,7 @@ void	start_fdf(t_all *all)
 		WIN_CENTER_X, WIN_CENTER_Y);
 	mlx_string_put(all->vars->mlx, all->vars->win, 10, 10,
 		0x0000FFFF, all->vars->title);
-	mlx_hook(all->vars->win, ON_KEY_DOWN, 1L<<0, move_fdf, all);
+	mlx_hook(all->vars->win, ON_KEY_DOWN, 1L << 0, move_fdf, all);
 	mlx_hook(all->vars->win, ON_DESTROY, 0, close_window, all);
 	mlx_loop(all->vars->mlx);
 	clean_up_mlx(all);

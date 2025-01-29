@@ -6,7 +6,7 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 15:04:39 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/01/28 20:03:04 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/01/29 23:59:31 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,8 @@
 # define TYPES_H
 # include <stdlib.h>
 # include <math.h>
-# define WIN_HEIGHT 1080
-# define WIN_WIDTH 1920
+# define WIN_H 1080
+# define WIN_W 1920
 # define WIN_CENTER_Y 540
 # define WIN_CENTER_X 960
 # define INVALID_ARG 0
@@ -40,7 +40,7 @@ typedef struct s_all
 	t_map		*map;
 	t_str		*str;
 	t_line		*line;
-	t_point	*point;
+	t_point		*point;
 	int			fd;
 	char		*file;
 }				t_all;
@@ -83,8 +83,8 @@ typedef struct s_data
 typedef struct s_map
 {
 	int			*check_width;
-	int			width;
-	int			height;
+	double		width;
+	double		height;
 	int			***z_value;
 }				t_map;
 
