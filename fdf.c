@@ -6,7 +6,7 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/25 15:04:54 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/01/30 00:03:22 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/01/30 23:23:26 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -558,24 +558,32 @@ void	print_xy(t_point *point)
 	printf("point->y = %f\n", point->y);
 }
 
-void	rotate_xy(t_program *program, double *x, double *y)
+void	rotate_xy(t_program *program, double *x, double *y, double *z)
 {
 	double	tmp_x;
 	double	tmp_y;
-	// double	tmp_z;
+	double	tmp_z;
 
-	// (void)*z;
-	tmp_x = *x;
-	tmp_y = *y;
-	*x = tmp_x * cos(program->angle_z) - tmp_y * sin(program->angle_z);
-	*y = tmp_x * sin(program->angle_z) + tmp_y * cos(program->angle_z);
+	tmp_x = *x * cos(program->angle_z) - *y * sin(program->angle_z);
+	tmp_y = *x * sin(program->angle_z) + *y * cos(program->angle_z);
+	*x = tmp_x;
+	*y = tmp_y;
+	tmp_y = *y * cos(program->angle_x) - *z * sin(program->angle_x);
+	tmp_z = *y * sin(program->angle_x) + *z * cos(program->angle_x);
+	*y = tmp_y;
+	*z = tmp_z;
+	tmp_z = *z * cos(program->angle_y) + *x * sin(program->angle_y);
+	tmp_x = -*z * sin(program->angle_y) + *x * cos(program->angle_y);
+	*z = tmp_z;
+	*x = tmp_x;
 }
 
 void	draw_map(t_all *all, t_map *map, t_program *program, t_line *line)
 {
-	const double	height_factor = sqrt(2.0) / sqrt(3.0);
-	int				i;
-	int				j;
+	int		i;
+	int		j;
+	double	tmp_x;
+	double	tmp_y;
 
 	i = 0;
 	while (i < map->height)
@@ -585,24 +593,30 @@ void	draw_map(t_all *all, t_map *map, t_program *program, t_line *line)
 		{
 			all->point->x = (j - (map->width - 1) / 2);
 			all->point->y = (i - (map->height - 1) / 2);
-			all->point->z = map->z_value[i][j][0] * height_factor;
-			rotate_xy(program, &all->point->x, &all->point->y);
+			tmp_x = all->point->x;
+			tmp_y = all->point->y;
+			all->point->x = (tmp_x - tmp_y) * program->cos;
+			all->point->y = (tmp_x + tmp_y) * program->sin;
+			all->point->z = map->z_value[i][j][0];
+			rotate_xy(program, &all->point->x, &all->point->y, &all->point->z);
 			program->screen_x = (all->point->x * program->scale) + WIN_CENTER_X + program->offset_x;
-			program->screen_y = (all->point->y * program->scale) + WIN_CENTER_Y + program->offset_y;
+			program->screen_y = ((all->point->y - all->point->z) * program->scale) + WIN_CENTER_Y + program->offset_y;
 			line->color = map->z_value[i][j][1];
-			// print_xy(all->point);
-			// draw_line(all, line);
+			draw_line(all, line);
 			if (j < map->width - 1)
 			{
 				line->x0 = program->screen_x;
 				line->y0 = program->screen_y;
 				all->point->x = (j + 1 - (map->width - 1) / 2);
 				all->point->y = (i - (map->height - 1) / 2);
-				all->point->z = map->z_value[i][j + 1][0] * height_factor;
-				rotate_xy(program, &all->point->x, &all->point->y);
+				tmp_x = all->point->x;
+				tmp_y = all->point->y;
+				all->point->x = (tmp_x - tmp_y) * program->cos;
+				all->point->y = (tmp_x + tmp_y) * program->sin;
+				all->point->z = map->z_value[i][j + 1][0];
+				rotate_xy(program, &all->point->x, &all->point->y, &all->point->z);
 				line->x1 = (all->point->x * program->scale) + WIN_CENTER_X + program->offset_x;
-				line->y1 = (all->point->y * program->scale) + WIN_CENTER_Y + program->offset_y;
-				// print_line(line);
+				line->y1 = ((all->point->y - all->point->z) * program->scale) + WIN_CENTER_Y + program->offset_y;
 				draw_line(all, line);
 			}
 			if (i < map->height - 1)
@@ -611,12 +625,14 @@ void	draw_map(t_all *all, t_map *map, t_program *program, t_line *line)
 				line->y0 = program->screen_y;
 				all->point->x = (j - (map->width - 1) / 2);
 				all->point->y = (i + 1 - (map->height - 1) / 2);
-				all->point->z = map->z_value[i + 1][j][0] * height_factor;
-				rotate_xy(program, &all->point->x, &all->point->y);
-				line->x1 = (all->point->x * program->scale)
-					+ WIN_CENTER_X + program->offset_x;
-				line->y1 = (all->point->y * program->scale)
-					+ WIN_CENTER_Y + program->offset_y;
+				tmp_x = all->point->x;
+				tmp_y = all->point->y;
+				all->point->x = (tmp_x - tmp_y) * program->cos;
+				all->point->y = (tmp_x + tmp_y) * program->sin;
+				all->point->z = map->z_value[i + 1][j][0];
+				rotate_xy(program, &all->point->x, &all->point->y, &all->point->z);
+				line->x1 = (all->point->x * program->scale) + WIN_CENTER_X + program->offset_x;
+				line->y1 = ((all->point->y - all->point->z) * program->scale) + WIN_CENTER_Y + program->offset_y;
 				draw_line(all, line);
 			}
 			j++;
@@ -676,7 +692,7 @@ void	rotate_axis(t_program *program, int keycode)
 
 void	reset_position(t_program *program)
 {
-	program->scale = 2;
+	program->scale = 0;
 	program->offset_x = 0;
 	program->offset_y = 0;
 	program->angle_x = 0;
