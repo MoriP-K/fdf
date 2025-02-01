@@ -6,20 +6,20 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 15:04:39 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/01/29 23:59:31 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/02/01 22:41:04 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef TYPES_H
 # define TYPES_H
-# include <stdlib.h>
-# include <math.h>
+# include "keycode.h"
 # define WIN_H 1080
 # define WIN_W 1920
 # define WIN_CENTER_Y 540
 # define WIN_CENTER_X 960
-# define INVALID_ARG 0
-# define PROCESSING 1
+# define NONE 0
+# define INVALID_ARG 1
+# define PROCESSING 2
 # define ON_KEY_DOWN 2
 # define ON_DESTROY 17
 
@@ -106,6 +106,8 @@ typedef struct s_point
 	int			dy;
 	int			sx;
 	int			sy;
+	double		tmp_x;
+	double		tmp_y;
 }				t_point;
 
 typedef struct s_str

@@ -6,7 +6,7 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/16 16:43:26 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/01/22 21:09:31 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/02/01 16:16:47 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@
 # include <unistd.h>
 # include "../libft/libft.h"
 
-typedef struct	s_sp
+typedef struct s_sp
 {
 	char		buf[BUFFER_SIZE + 1];
 	int			buf_pos;
