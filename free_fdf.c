@@ -6,7 +6,7 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/01 22:18:56 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/02/01 23:13:54 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/02/02 14:02:59 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,22 +19,21 @@ void	free_map(t_map *map)
 
 	if (!map)
 		return ;
-	i = 0;
+	i = -1;
 	if (map->z_value)
 	{
-		while (i < map->height)
+		while (++i < map->height)
 		{
 			if (map->z_value[i])
 			{
-				j = 0;
-				while (j < map->width && map->z_value[i][j])
+				j = -1;
+				while (++j < map->width && map->z_value[i][j])
 				{
-					free(map->z_value[i][j]);
-					j++;
+					if (map->z_value[i][j])
+						free(map->z_value[i][j]);
 				}
 				free(map->z_value[i]);
 			}
-			i++;
 		}
 		free(map->z_value);
 	}
@@ -85,8 +84,7 @@ void	all_free(t_all *all, int flag, int errorno)
 		free(all->line);
 	if (all->point)
 		free(all->point);
-	if (all)
-		free(all);
+	free(all);
 	if (flag)
 		throwing_error(errorno);
 }

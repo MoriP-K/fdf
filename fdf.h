@@ -6,7 +6,7 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/01 20:17:18 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/02/01 23:16:48 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/02/02 14:04:59 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@ int					count_word(const char *str, char delimeter);
 int					clean_up_width(int *check);
 int					get_map_width(int fd, char *file, int height, int **check);
 t_map				*get_map_size(t_all *all, t_map *map);
+void				init_map_data(t_map *map);
 t_map				*init_map(t_all *all);
 t_line				*init_line(void);
 t_point				*init_point(void);

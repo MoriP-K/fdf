@@ -6,7 +6,7 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/01 20:32:31 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/02/01 23:43:32 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/02/02 14:30:26 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,12 +55,9 @@ void	draw_line(t_all *all, t_line *line)
 	error = all->point->dx - all->point->dy;
 	while (1)
 	{
+		my_mlx_pixel_put(all->img, line->x0, line->y0, line->color);
 		if (line->x0 == line->x1 && line->y0 == line->y1)
 			break ;
-		usleep(100000);
-		mlx_put_image_to_window(all->vars->mlx, all->vars->win, all->img->img, 0, 0);
-		my_mlx_pixel_put(all->img, line->x0, line->y0, line->color);
 		next_point(all->point, line, &error, &error2);
 	}
-	// my_mlx_pixel_put(all->img, line->x0, line->y0, line->color);
 }

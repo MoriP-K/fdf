@@ -6,7 +6,7 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/01 20:34:13 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/02/01 22:50:44 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/02/02 14:28:47 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,14 +39,13 @@ int	assign_data_and_color(int *z_value, char *arr)
 
 int	get_data_and_color(int **z_value, char **arr, int *width)
 {
+	if (!arr[*width])
+		return (0);
 	z_value[*width] = malloc(sizeof(int) * 2);
 	if (!z_value[*width])
 		return (0);
-	if (arr[*width])
-	{
-		if (!assign_data_and_color(z_value[*width], arr[*width]))
-			return (0);
-	}
+	if (!assign_data_and_color(z_value[*width], arr[*width]))
+		return (0);
 	return (1);
 }
 

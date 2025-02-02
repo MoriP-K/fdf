@@ -6,7 +6,7 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/01 22:23:11 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/02/01 22:24:13 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/02/02 14:48:59 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,6 +69,14 @@ t_map	*get_map_size(t_all *all, t_map *map)
 	return (map);
 }
 
+void	init_map_data(t_map *map)
+{
+	map->z_value = NULL;
+	map->check_width = NULL;
+	map->height = 0;
+	map->width = 0;
+}
+
 t_map	*init_map(t_all *all)
 {
 	t_map	*map;
@@ -76,6 +84,7 @@ t_map	*init_map(t_all *all)
 	map = (t_map *)malloc(sizeof(t_map));
 	if (!map)
 		return (NULL);
+	init_map_data(map);
 	if (!get_map_size(all, map))
 	{
 		free(map);

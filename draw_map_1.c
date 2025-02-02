@@ -6,7 +6,7 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/01 20:28:57 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/02/01 23:39:12 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/02/02 14:13:28 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,6 @@ void	project_point(t_all *all, t_program *program, t_line *line, int flag)
 	{
 		rotate_xyz(program, &all->point->x, &all->point->y, &all->point->z);
 		convert_to_isometric(all->point, program);
-		draw_line(all, line);
 	}
 	else
 	{
