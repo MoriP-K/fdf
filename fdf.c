@@ -6,7 +6,7 @@
 /*   By: kmoriyam <kmoriyam@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/25 15:04:54 by kmoriyam          #+#    #+#             */
-/*   Updated: 2025/02/02 14:20:23 by kmoriyam         ###   ########.fr       */
+/*   Updated: 2025/02/02 23:27:40 by kmoriyam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,10 @@ void	init_all_structure(t_all **all, char *file)
 	ft_memset(*all, 0, sizeof(t_all));
 	(*all)->fd = open(file, O_RDONLY);
 	if ((*all)->fd == -1)
+	{
+		free(*all);
 		exit (EXIT_FAILURE);
+	}
 	(*all)->file = file;
 	(*all)->img = init_data();
 	(*all)->map = init_map(*all);
@@ -88,8 +91,6 @@ void	start_fdf(t_all *all)
 	mlx_hook(all->vars->win, ON_KEY_DOWN, 1L << 0, move_fdf, all);
 	mlx_hook(all->vars->win, ON_DESTROY, 0, close_window, all);
 	mlx_loop(all->vars->mlx);
-	clean_up_mlx(all);
-	all_free(all, 0, NONE);
 }
 
 int	main(int ac, char **av)
@@ -103,6 +104,4 @@ int	main(int ac, char **av)
 	if (!ready_for_mlx(all))
 		throwing_error(PROCESSING);
 	start_fdf(all);
-	clean_up_mlx(all);
-	all_free(all, 0, NONE);
 }
